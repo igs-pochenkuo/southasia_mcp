@@ -67,7 +67,7 @@ src/southasia/
 
 ## 開發新工具
 
-請參考 `Tool_GUIDE.md` 了解如何開發新的工具。基本步驟如下：
+請參考 [`Tool_GUIDE.md`](Tool_GUIDE.md) 了解如何開發新的工具。基本步驟如下：
 
 1. 在 `handlers` 目錄下創建新的處理器文件
 2. 實現工具的處理邏輯
@@ -76,33 +76,47 @@ src/southasia/
 
 ### Hello World 示例
 
-`hello_world.py` 提供了一個簡單的示例工具：
+`hello_world.py` 提供了一個簡單的示例工具實現：
 
 ```python
-async def handle_hello_world(params: Dict[str, Any]) -> Dict[str, Any]:
-    return {
-        "message": "Hello World! 這是您的第一個 SouthAsia 工具！"
-    }
-```
+from typing import Dict, Any
+from mcp.server.models import types
 
-工具註冊：
+# 工具列表
+def handle_list_tools() -> list[types.Tool]:
+    """返回可用工具列表"""
+    return [
+        types.Tool(
+            name="mcp_southAsia_hello_world",
+            description="A simple demonstration tool that returns a greeting message",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "random_string": {
+                        "type": "string",
+                        "description": "Dummy parameter for no-parameter tools"
+                    }
+                },
+                "required": ["random_string"],
+            },
+        ),
+        # 可以在這裡添加更多工具...
+    ]
 
-```python
-types.Tool(
-    name="hello_world",
-    description="A simple demonstration tool that returns a greeting message",
-    inputSchema={
-        "type": "object",
-        "properties": {
-            "random_string": {
-                "type": "string",
-                "description": "Dummy parameter for no-parameter tools"
-            }
-        },
-        "required": ["random_string"],
-    },
-)
-```
+async def handle_call_tool(tool_name: str, params: Dict[str, Any]) -> Dict[str, Any]:
+    """處理工具調用"""
+    if tool_name == "mcp_southAsia_hello_world":
+        return {
+            "message": "Hello World! 這是您的第一個 SouthAsia 工具！"
+        }
+    
+    raise ValueError(f"未知的工具：{tool_name}")
+
+這個示例展示了：
+
+1. 如何定義工具列表（`handle_list_tools`）
+2. 如何處理工具調用（`handle_call_tool`）
+3. 如何進行參數驗證和錯誤處理
 
 ## 開發建議
 
@@ -131,6 +145,6 @@ types.Tool(
 
 ## 相關文件
 
-- `Tool_GUIDE.md`: 詳細的工具開發指南
+- [`Tool_GUIDE.md`](Tool_GUIDE.md): 詳細的工具開發指南
 - `src/southasia/handlers/hello_world.py`: 示例工具實現
 - `src/southasia/server.py`: 服務器配置和工具註冊
