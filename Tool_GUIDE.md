@@ -1,65 +1,100 @@
 # SouthAsia 工具開發指南
 
-這個指南將幫助您了解如何在 SouthAsia 專案中新增自己的工具。我們將通過一個簡單的 "Hello World" 工具示例來說明整個過程。
+這個指南將幫助您了解如何在 SouthAsia 專案中新增自己的工具。我們將通過簡單的示例工具來說明整個過程。
 
 ## 目錄結構
 
 ```
 src/southasia/
-├── __init__.py
-├── server.py
-├── handlers/
+├── __init__.py          # 入口點
+├── server.py            # 服務器配置
+├── handlers/            # 請求處理
 │   ├── __init__.py
-│   └── hello_world.py
-├── models/
+│   └── hello_world.py   # 示例工具
+├── models/              # 資料模型（可選）
 │   └── __init__.py
-└── services/
+└── services/           # 業務邏輯（可選）
     └── __init__.py
 ```
 
-## 開發新工具的步驟
+## 開發新工具
 
-### 1. 在 handlers 目錄下創建新的處理器
+### 1. 在 handlers 目錄下創建或選擇處理器文件
 
-首先，在 `handlers` 目錄下創建一個新的 Python 文件。例如，對於 "Hello World" 工具，我們創建了 `hello_world.py`：
+每個處理器文件可以包含多個相關的工具。例如，對於示例工具，我們在 `hello_world.py` 中定義了兩個工具：
 
 ```python
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 import mcp.types as types
-
-async def handle_hello_world(params: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    一個簡單的示範工具，用於展示如何實作新的工具。
-    
-    Args:
-        params (Dict[str, Any]): 工具參數，在這個示例中我們不使用任何參數
-        
-    Returns:
-        Dict[str, Any]: 回傳一個包含問候訊息的字典
-    """
-    return {
-        "message": "Hello World! 這是您的第一個 SouthAsia 工具！"
-    }
 
 async def handle_list_tools() -> List[types.Tool]:
     """
     列出所有可用的工具。
     每個工具使用 JSON Schema 驗證來指定其參數。
-    
-    返回值:
-        包含所有可用工具的列表，每個工具都有名稱、描述和輸入架構
     """
     return [
         types.Tool(
-            name="hello-world",
-            description="一個簡單的示範工具，回傳問候訊息",
+            name="hello_world",
+            description="A simple demonstration tool that returns a greeting message",
             inputSchema={
                 "type": "object",
-                "properties": {},  # 這個工具不需要任何參數
-                "required": [],
+                "properties": {
+                    "random_string": {
+                        "type": "string",
+                        "description": "Dummy parameter for no-parameter tools"
+                    }
+                },
+                "required": ["random_string"],
+            },
+        ),
+        types.Tool(
+            name="hello_name",
+            description="A demonstration tool that greets you by name",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Your name"
+                    }
+                },
+                "required": ["name"],
             },
         ),
     ]
+
+async def handle_call_tool(
+    name: str, arguments: Optional[Dict]
+) -> List[types.TextContent | types.ImageContent | types.EmbeddedResource]:
+    """
+    處理工具執行請求。
+    根據工具名稱和參數執行對應的操作。
+    """
+    if not arguments:
+        raise ValueError("缺少參數")
+
+    if name == "hello_world":
+        return [
+            types.TextContent(
+                type="text",
+                text="Hello World! 這是您的第一個 SouthAsia 工具！"
+            )
+        ]
+    
+    elif name == "hello_name":
+        user_name = arguments.get("name")
+        if not user_name:
+            raise ValueError("缺少名字參數")
+            
+        return [
+            types.TextContent(
+                type="text",
+                text=f"Hello {user_name}! 很高興見到您！"
+            )
+        ]
+    
+    else:
+        raise ValueError(f"未知的工具: {name}")
 ```
 
 ### 2. 在 server.py 中註冊工具
@@ -68,76 +103,86 @@ async def handle_list_tools() -> List[types.Tool]:
 
 1. 導入處理器：
 ```python
-from .handlers.hello_world import handle_hello_world, handle_list_tools  # 加在其他 import 語句後面
+from .handlers.your_handler import handle_list_tools, handle_call_tool
 ```
 
-2. 註冊工具列表處理器：
+2. 註冊工具處理器：
 ```python
 # 註冊工具列表處理器
 server.list_tools()(handle_list_tools)
-```
 
-3. 註冊個別工具：
-```python
-# 註冊您的工具
-server.call_tool("hello-world")(handle_hello_world)
+# 註冊工具調用處理器
+server.call_tool()(handle_call_tool)
 ```
-
-注意：工具名稱必須與 `handle_list_tools` 中定義的名稱完全相同。
 
 ### 3. 工具開發指南
 
 1. **處理器函數規範**：
-   - 必須是非同步函數（使用 `async def`）
-   - 接受一個參數字典 `params: Dict[str, Any]`
-   - 返回一個字典作為結果
+   - `handle_list_tools`: 返回可用工具列表
+   - `handle_call_tool`: 處理工具調用
+   - 所有函數都必須是非同步的（使用 `async def`）
 
-2. **工具列表規範**：
-   - 在 `handle_list_tools` 中定義所有可用的工具
-   - 每個工具都需要有名稱、描述和輸入架構
-   - 使用 JSON Schema 定義輸入參數的格式
+2. **工具定義規範**：
+   - 每個工具都需要有唯一的名稱
+   - 提供清晰的描述
+   - 使用 JSON Schema 定義輸入參數
+   - 在描述中使用英文（這是 MCP 工具的慣例）
 
-3. **錯誤處理**：
+3. **參數驗證**：
+   - 在 `handle_call_tool` 中驗證必要的參數
+   - 使用 `arguments.get()` 安全地獲取參數
+   - 提供清晰的錯誤訊息
+
+4. **返回值格式**：
+   - 使用 `types.TextContent` 返回文字
+   - 使用 `types.ImageContent` 返回圖片
+   - 使用 `types.EmbeddedResource` 返回嵌入資源
+
+5. **錯誤處理**：
    - 使用 try-except 處理可能的錯誤
-   - 返回適當的錯誤訊息給客戶端
-
-4. **參數驗證**：
-   - 在處理器中驗證必要的參數
-   - 提供清晰的錯誤訊息當參數無效時
-
-5. **文檔**：
-   - 為您的處理器函數添加詳細的文檔字符串
-   - 說明參數格式和返回值格式
+   - 提供有意義的錯誤訊息
+   - 驗證所有必要的參數
 
 ### 4. 最佳實踐
 
-1. **模組化**：
-   - 將相關的工具放在同一個模組中
-   - 使用適當的目錄結構組織代碼
+1. **工具組織**：
+   - 相關的工具放在同一個處理器文件中
+   - 使用有意義的文件名
+   - 保持代碼結構清晰
 
 2. **命名規範**：
-   - 處理器函數使用 `handle_` 前綴
-   - 工具名稱使用小寫字母和連字符（例如：`hello-world`）
-   - 文件名應該清晰地表示其功能
+   - 工具名稱使用小寫字母和下劃線
+   - 描述使用清晰的英文
+   - 參數名稱要有意義
 
-3. **測試**：
-   - 為您的工具編寫單元測試
-   - 測試各種輸入情況和錯誤情況
+3. **文檔**：
+   - 為每個函數添加文檔字符串
+   - 說明參數和返回值
+   - 提供使用示例
 
-## 示例：使用 Hello World 工具
+4. **測試**：
+   - 測試所有工具功能
+   - 測試錯誤處理
+   - 測試參數驗證
 
-當您完成工具的註冊後，可以通過 MCP SDK 調用該工具：
+## 示例：使用工具
 
 ```python
-result = await mcp.call_tool("hello-world", {})
-print(result["message"])  # 輸出: Hello World! 這是您的第一個 SouthAsia 工具！
+# Hello World 工具
+result = await mcp.call_tool("hello_world", {"random_string": "dummy"})
+print(result[0].text)  # 輸出: Hello World! 這是您的第一個 SouthAsia 工具！
+
+# Hello Name 工具
+result = await mcp.call_tool("hello_name", {"name": "Alice"})
+print(result[0].text)  # 輸出: Hello Alice! 很高興見到您！
 ```
 
-## 下一步
+## 注意事項
 
-1. 查看 `hello_world.py` 作為參考
-2. 根據您的需求創建新的工具
-3. 確保添加適當的錯誤處理和參數驗證
-4. 編寫清晰的文檔
+1. 所有更改都需要重啟服務器才能生效
+2. 確保工具名稱在整個系統中是唯一的
+3. 參數驗證要嚴格
+4. 錯誤訊息要清晰
+5. 保持代碼風格一致
 
 如果您有任何問題，請參考現有的工具實現或聯繫專案維護者。 
