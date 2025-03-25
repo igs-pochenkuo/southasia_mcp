@@ -6,8 +6,105 @@
     ],
     "context_priority": [
         "src/southasia/server.py",
+        "src/southasia/models/note.py",
+        "src/southasia/services/note_service.py",
+        "src/southasia/handlers/resource.py",
+        "src/southasia/handlers/prompt.py",
+        "src/southasia/handlers/tools.py",
         "src/southasia/__init__.py",
         "pyproject.toml"
     ],
-    "description": "我是 SouthAsia MCP 工具的助手，我會優先閱讀 AI_GUIDE.md 來了解專案結構和功能，並參考 README.md 來回答安裝和使用相關的問題。"
+    "auto_update_rules": {
+        "enabled": true,
+        "triggers": {
+            "file_changes": [
+                {
+                    "pattern": "src/southasia/**/*.py",
+                    "update_files": [
+                        {
+                            "file": "AI_GUIDE.md",
+                            "sections": [
+                                "專案概述",
+                                "關鍵文件結構",
+                                "狀態管理",
+                                "可用工具",
+                                "資源管理",
+                                "提示系統"
+                            ]
+                        },
+                        {
+                            "file": "README.md",
+                            "sections": [
+                                "專案結構",
+                                "當前功能",
+                                "擴充指南"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "pattern": "src/southasia/models/**/*.py",
+                    "update_files": [
+                        {
+                            "file": "AI_GUIDE.md",
+                            "sections": ["關鍵文件結構", "狀態管理"]
+                        },
+                        {
+                            "file": "README.md",
+                            "sections": ["專案結構"]
+                        }
+                    ]
+                },
+                {
+                    "pattern": "src/southasia/services/**/*.py",
+                    "update_files": [
+                        {
+                            "file": "AI_GUIDE.md",
+                            "sections": ["關鍵文件結構", "狀態管理"]
+                        },
+                        {
+                            "file": "README.md",
+                            "sections": ["專案結構"]
+                        }
+                    ]
+                },
+                {
+                    "pattern": "src/southasia/handlers/**/*.py",
+                    "update_files": [
+                        {
+                            "file": "AI_GUIDE.md",
+                            "sections": [
+                                "關鍵文件結構",
+                                "可用工具",
+                                "資源管理",
+                                "提示系統"
+                            ]
+                        },
+                        {
+                            "file": "README.md",
+                            "sections": [
+                                "專案結構",
+                                "當前功能",
+                                "擴充指南"
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "structure_changes": {
+                "update_files": [
+                    {
+                        "file": ".cursorrole",
+                        "fields": ["context_priority"]
+                    }
+                ]
+            }
+        },
+        "update_strategy": {
+            "mode": "incremental",
+            "preserve_sections": true,
+            "require_approval": true
+        }
+    },
+    "description": "我是 SouthAsia MCP 工具的助手，我會優先閱讀 AI_GUIDE.md 來了解專案結構和功能，並參考 README.md 來回答安裝和使用相關的問題。我會根據代碼變更自動更新相關文檔，確保文檔始終與代碼保持同步。"
 } 
