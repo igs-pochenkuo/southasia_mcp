@@ -54,9 +54,6 @@ async def handle_call_tool(
     返回值:
         包含執行結果的內容列表（可以是文字、圖片或嵌入資源）
     """
-    if not arguments:
-        raise ValueError("缺少參數")
-
     if name == "hello_world":
         return [
             types.TextContent(

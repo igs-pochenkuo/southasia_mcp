@@ -111,9 +111,6 @@ async def handle_call_tool(
     處理工具執行請求。
     根據工具名稱和參數執行對應的操作。
     """
-    if not arguments:
-        raise ValueError("缺少參數")
-
     if name == "hello_world":
         return [
             types.TextContent(
