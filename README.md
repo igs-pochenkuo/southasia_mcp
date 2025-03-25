@@ -2,6 +2,39 @@
 
 這是一個基於 MCP (Model Control Protocol) 框架的工具開發模板。
 
+## 工具名稱配置
+
+如果您想要更改工具名稱（預設為 "southAsia"），需要修改以下位置：
+
+1. `src/southasia/server.py` 中的常量配置：
+```python
+MCP_TOOL_NAME = "southAsia"  # 更改此處以修改工具名稱
+```
+
+2. `pyproject.toml` 中的命令行工具名稱（使用小寫）：
+```toml
+[project.scripts]
+southasia = "southasia.server:main"  # 更改 "southasia" 為您想要的名稱
+```
+
+3. Cursor 配置文件中的工具名稱：
+```json
+{
+  "southAsia": {  // 更改此處為您的工具名稱
+    "command": "cmd",
+    "args": [
+      "/c",
+      "southasia"  // 更改此處為您的命令行工具名稱
+    ]
+  }
+}
+```
+
+注意：
+- 工具名稱區分大小寫
+- 命令行工具名稱建議使用小寫
+- 修改後需要重新安裝套件並重啟 Cursor
+
 ## 分支說明
 
 - `main`: 主分支，包含完整的筆記管理工具實現

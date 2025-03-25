@@ -2,6 +2,47 @@
 
 這個指南將幫助您了解如何在 SouthAsia 專案中新增自己的工具。我們將通過簡單的示例工具來說明整個過程。
 
+## 工具名稱配置
+
+工具名稱在整個專案中有幾個關鍵的使用位置。如果您需要修改工具名稱（例如從 "southAsia" 改為其他名稱），請確保更新以下位置：
+
+1. `src/southasia/server.py` 中的常量：
+```python
+MCP_TOOL_NAME = "southAsia"  # 更改此處以修改工具名稱
+MCP_TOOL_NAME_LOWERCASE = MCP_TOOL_NAME.lower()  # 用於命令行工具名稱
+```
+
+2. 所有工具的名稱前綴：
+```python
+# 在 handlers 中的工具名稱
+name="mcp_southAsia_hello_world"  # 更改 southAsia 部分
+```
+
+3. `pyproject.toml` 中的命令行工具名稱：
+```toml
+[project.scripts]
+southasia = "southasia.server:main"  # 更改為新的名稱（小寫）
+```
+
+4. Cursor 配置中的工具名稱：
+```json
+{
+  "southAsia": {  # 更改此處
+    "command": "cmd",
+    "args": [
+      "/c",
+      "southasia"  # 更改此處（小寫）
+    ]
+  }
+}
+```
+
+注意事項：
+- 工具名稱區分大小寫
+- 命令行工具名稱建議使用小寫
+- 所有工具的名稱前綴必須一致
+- 修改後需要重新安裝套件並重啟 Cursor
+
 ## 目錄結構
 
 ```
