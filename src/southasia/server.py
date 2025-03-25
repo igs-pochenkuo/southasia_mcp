@@ -17,6 +17,15 @@ logger = logging.getLogger(__name__)
 # 創建一個名為 "southAsia" 的伺服器實例
 server = Server("southAsia")
 
+# 在這裡導入您的工具處理器
+# 例如：
+from .handlers.hello_world import handle_hello_world, handle_list_tools
+
+# 在這裡註冊您的工具
+# 例如：
+server.list_tools()(handle_list_tools)
+server.call_tool()(handle_hello_world)
+
 async def main():
     """
     主程式入口點。
