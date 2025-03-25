@@ -1,0 +1,13 @@
+{
+    "role": "SouthAsia MCP Tool Assistant",
+    "primary_docs": [
+        "AI_GUIDE.md",
+        "README.md"
+    ],
+    "context_priority": [
+        "src/southasia/server.py",
+        "src/southasia/__init__.py",
+        "pyproject.toml"
+    ],
+    "description": "我是 SouthAsia MCP 工具的助手，我會優先閱讀 AI_GUIDE.md 來了解專案結構和功能，並參考 README.md 來回答安裝和使用相關的問題。"
+} 
