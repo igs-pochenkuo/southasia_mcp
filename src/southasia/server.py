@@ -5,6 +5,11 @@ from mcp.server.models import InitializationOptions
 from mcp.server import NotificationOptions, Server
 import mcp.server.stdio
 
+# MCP 工具名稱配置
+MCP_TOOL_NAME = "southAsia"  # 更改此處以修改工具名稱
+MCP_TOOL_NAME_LOWERCASE = MCP_TOOL_NAME.lower()  # 用於命令行工具名稱
+MCP_TOOL_VERSION = "1.0"
+
 # 設定日誌格式
 logging.basicConfig(
     level=logging.INFO,
@@ -14,8 +19,8 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-# 創建一個名為 "southAsia" 的伺服器實例
-server = Server("southAsia")
+# 創建一個 MCP 伺服器實例
+server = Server(MCP_TOOL_NAME)
 
 # 在這裡導入您的工具處理器
 # 例如：
@@ -32,7 +37,7 @@ async def main():
     主程式入口點。
     使用標準輸入/輸出串流運行伺服器。
     """
-    logger.info("正在啟動 SouthAsia MCP 工具...")
+    logger.info(f"正在啟動 {MCP_TOOL_NAME} MCP 工具...")
     logger.info("初始化服務...")
     
     try:
@@ -43,8 +48,8 @@ async def main():
                 read_stream,
                 write_stream,
                 InitializationOptions(
-                    server_name="southAsia",
-                    server_version="1.0",
+                    server_name=MCP_TOOL_NAME,
+                    server_version=MCP_TOOL_VERSION,
                     capabilities=server.get_capabilities(
                         notification_options=NotificationOptions(),
                         experimental_capabilities={},
@@ -56,5 +61,5 @@ async def main():
         sys.exit(1)
 
 if __name__ == "__main__":
-    logger.info("歡迎使用 SouthAsia MCP 工具")
+    logger.info(f"歡迎使用 {MCP_TOOL_NAME} MCP 工具")
     asyncio.run(main())
