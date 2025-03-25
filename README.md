@@ -16,7 +16,23 @@ python -m venv .venv
 pip install -e .
 ```
 
-3. 運行服務器：
+3. 在 Cursor 中配置 MCP 工具：
+   - 打開 Cursor 的設定檔案：`%USERPROFILE%\.cursor\mcp.json`
+   - 添加以下配置：
+```json
+{
+  "southAsia": {
+    "command": "cmd",
+    "args": [
+      "/c",
+      "southasia"
+    ]
+  }
+}
+```
+   - 重啟 Cursor 使配置生效
+
+4. 運行服務器(測試)：
 ```powershell
 # 方法 1：使用安裝的命令
 southasia
@@ -24,6 +40,10 @@ southasia
 # 方法 2：直接運行模組
 python -m southasia.server
 ```
+
+5. 測試安裝：
+   - 在 Cursor 中輸入指令：`@southAsia add-note ...`
+   - 如果看到啟動訊息和執行結果，表示安裝成功
 
 ## 專案結構
 
