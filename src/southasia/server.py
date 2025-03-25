@@ -19,12 +19,13 @@ server = Server("southAsia")
 
 # 在這裡導入您的工具處理器
 # 例如：
-from .handlers.hello_world import handle_hello_world, handle_list_tools
+from .handlers.hello_world import handle_list_tools, handle_call_tool
 
-# 在這裡註冊您的工具
-# 例如：
+# 註冊工具列表處理器
 server.list_tools()(handle_list_tools)
-server.call_tool()(handle_hello_world)
+
+# 註冊工具調用處理器
+server.call_tool()(handle_call_tool)
 
 async def main():
     """

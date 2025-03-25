@@ -1,19 +1,5 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 import mcp.types as types
-
-async def handle_hello_world(params: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    一個簡單的示範工具，用於展示如何實作新的工具。
-    
-    Args:
-        params (Dict[str, Any]): 工具參數，在這個示例中我們不使用任何參數
-        
-    Returns:
-        Dict[str, Any]: 回傳一個包含問候訊息的字典
-    """
-    return {
-        "message": "Hello World! 這是您的第一個 SouthAsia 工具！"
-    }
 
 async def handle_list_tools() -> List[types.Tool]:
     """
@@ -32,10 +18,64 @@ async def handle_list_tools() -> List[types.Tool]:
                 "properties": {
                     "random_string": {
                         "type": "string",
-                        "description": "Dummy parameter for no-parameter tools，簡單來說這個參數沒有屁用"
+                        "description": "Dummy parameter for no-parameter tools"
                     }
                 },
                 "required": ["random_string"],
             },
         ),
-    ] 
+        types.Tool(
+            name="hello_name",
+            description="A demonstration tool that greets you by name",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Your name"
+                    }
+                },
+                "required": ["name"],
+            },
+        ),
+    ]
+
+async def handle_call_tool(
+    name: str, arguments: Optional[Dict]
+) -> List[types.TextContent | types.ImageContent | types.EmbeddedResource]:
+    """
+    處理工具執行請求。
+    根據工具名稱和參數執行對應的操作。
+    
+    參數:
+        name: 要執行的工具名稱
+        arguments: 工具的參數字典
+    
+    返回值:
+        包含執行結果的內容列表（可以是文字、圖片或嵌入資源）
+    """
+    if not arguments:
+        raise ValueError("缺少參數")
+
+    if name == "hello_world":
+        return [
+            types.TextContent(
+                type="text",
+                text="Hello World! 這是您的第一個 SouthAsia 工具！"
+            )
+        ]
+    
+    elif name == "hello_name":
+        user_name = arguments.get("name")
+        if not user_name:
+            raise ValueError("缺少名字參數")
+            
+        return [
+            types.TextContent(
+                type="text",
+                text=f"Hello {user_name}! 很高興見到您！"
+            )
+        ]
+    
+    else:
+        raise ValueError(f"未知的工具: {name}") 

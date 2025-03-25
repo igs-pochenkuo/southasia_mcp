@@ -1,6 +1,11 @@
 # SouthAsia MCP Tool
 
-這是一個基於 MCP (Model Control Protocol) 框架的筆記管理工具。
+這是一個基於 MCP (Model Control Protocol) 框架的工具開發模板。
+
+## 分支說明
+
+- `main`: 主分支，包含完整的筆記管理工具實現
+- `empty`: 空白分支，僅包含基本框架和 Hello World 示例工具，適合開始新工具開發
 
 ## 安裝說明
 
@@ -42,8 +47,8 @@ python -m southasia.server
 ```
 
 5. 測試安裝：
-   - 在 Cursor 中輸入指令：`@southAsia add-note ...`
-   - 如果看到啟動訊息和執行結果，表示安裝成功
+   - 在 Cursor 中輸入指令：`@southAsia hello_world`
+   - 如果看到問候訊息，表示安裝成功
 
 ## 專案結構
 
@@ -51,121 +56,60 @@ python -m southasia.server
 src/southasia/
 ├── __init__.py          # 入口點
 ├── server.py            # 服務器配置
-├── models/              # 資料模型
+├── handlers/            # 請求處理
 │   ├── __init__.py
-│   └── note.py         # 筆記模型
-├── services/            # 業務邏輯
-│   ├── __init__.py
-│   └── note_service.py # 筆記服務
-└── handlers/            # 請求處理
-    ├── __init__.py
-    ├── resource.py     # 資源處理
-    ├── prompt.py       # 提示處理
-    └── tools.py        # 工具處理
+│   └── hello_world.py   # Hello World 示例工具
+├── models/              # 資料模型（可選）
+│   └── __init__.py
+└── services/           # 業務邏輯（可選）
+    └── __init__.py
 ```
 
-## 當前功能
+## 開發新工具
 
-1. 筆記管理：
-   - 添加筆記 (`add-note`)
-   - 刪除筆記 (`delete-note`)
-   - 更新筆記 (`update-note`)
-   - 搜索筆記 (`search-notes`)
+請參考 `Tool_GUIDE.md` 了解如何開發新的工具。基本步驟如下：
 
-2. 資源管理：
-   - 列出所有筆記資源
-   - 讀取特定筆記內容
+1. 在 `handlers` 目錄下創建新的處理器文件
+2. 實現工具的處理邏輯
+3. 在 `handle_list_tools()` 中註冊工具
+4. 在 `server.py` 中導入和註冊處理器
 
-3. 提示功能：
-   - 生成筆記摘要
+### Hello World 示例
 
-## 擴充指南
+`hello_world.py` 提供了一個簡單的示例工具：
 
-### 1. 添加新工具
+```python
+async def handle_hello_world(params: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "message": "Hello World! 這是您的第一個 SouthAsia 工具！"
+    }
+```
 
-1. 在 `handlers/tools.py` 的 `handle_list_tools()` 中添加工具定義：
+工具註冊：
+
 ```python
 types.Tool(
-    name="your-tool-name",
-    description="Your tool description",
+    name="hello_world",
+    description="A simple demonstration tool that returns a greeting message",
     inputSchema={
         "type": "object",
         "properties": {
-            "param1": {"type": "string"},
-            # 添加更多參數
+            "random_string": {
+                "type": "string",
+                "description": "Dummy parameter for no-parameter tools"
+            }
         },
-        "required": ["param1"],
+        "required": ["random_string"],
     },
-)
-```
-
-2. 在同一文件的 `handle_call_tool()` 中實現工具邏輯：
-```python
-elif name == "your-tool-name":
-    # 實現工具邏輯
-    return [
-        types.TextContent(
-            type="text",
-            text="Your result",
-        )
-    ]
-```
-
-### 2. 添加新資源類型
-
-1. 在 `models` 目錄下創建新的資源模型：
-```python
-# models/your_resource.py
-from pydantic import BaseModel
-
-class YourResource(BaseModel):
-    # 定義資源屬性
-    pass
-```
-
-2. 在 `services` 目錄下創建資源服務：
-```python
-# services/your_resource_service.py
-class YourResourceService:
-    # 實現資源管理邏輯
-    pass
-```
-
-3. 在 `handlers/resource.py` 中添加資源處理：
-```python
-# 在 handle_list_resources() 中添加
-types.Resource(
-    uri=AnyUrl(f"your-scheme://internal/{name}"),
-    name=f"Resource: {name}",
-    description=f"Your resource description",
-    mimeType="your/mime-type",
-)
-```
-
-### 3. 添加新提示
-
-在 `handlers/prompt.py` 中添加提示定義：
-```python
-# 在 handle_list_prompts() 中添加
-types.Prompt(
-    name="your-prompt",
-    description="Your prompt description",
-    arguments=[
-        types.PromptArgument(
-            name="arg1",
-            description="Argument description",
-            required=False,
-        )
-    ],
 )
 ```
 
 ## 開發建議
 
 1. 遵循模組化結構：
-   - 模型放在 `models/` 目錄
-   - 業務邏輯放在 `services/` 目錄
-   - 請求處理放在 `handlers/` 目錄
+   - 工具處理器放在 `handlers/` 目錄
+   - 如需要，可以添加模型到 `models/` 目錄
+   - 如需要，可以添加服務到 `services/` 目錄
 
 2. 代碼品質：
    - 添加適當的錯誤處理
@@ -184,3 +128,9 @@ types.Prompt(
 2. 確保在虛擬環境中進行開發
 3. 遵循現有的模組化結構
 4. 保持代碼風格一致
+
+## 相關文件
+
+- `Tool_GUIDE.md`: 詳細的工具開發指南
+- `src/southasia/handlers/hello_world.py`: 示例工具實現
+- `src/southasia/server.py`: 服務器配置和工具註冊
