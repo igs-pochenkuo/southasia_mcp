@@ -1,19 +1,9 @@
 import asyncio
-from typing import Dict
 import sys
 import logging
-
-# 引入必要的模組和類型
 from mcp.server.models import InitializationOptions
-import mcp.types as types
 from mcp.server import NotificationOptions, Server
-from pydantic import AnyUrl
 import mcp.server.stdio
-
-from .handlers.resource import handle_list_resources, handle_read_resource
-from .handlers.prompt import handle_list_prompts, handle_get_prompt
-from .handlers.tools import handle_list_tools, handle_call_tool
-from .services.note_service import NoteService
 
 # 設定日誌格式
 logging.basicConfig(
@@ -24,27 +14,17 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-# 使用簡單的字典來儲存筆記，用於示範狀態管理
-# 格式為 {筆記名稱: 筆記內容}
-notes: dict[str, str] = {}
-
 # 創建一個名為 "southAsia" 的伺服器實例
 server = Server("southAsia")
 
-# 初始化筆記服務
-note_service = NoteService()
+# 在這裡導入您的工具處理器
+# 例如：
+from .handlers.hello_world import handle_hello_world, handle_list_tools
 
-# 註冊資源處理器
-server.list_resources()(handle_list_resources)
-server.read_resource()(handle_read_resource)
-
-# 註冊提示處理器
-server.list_prompts()(handle_list_prompts)
-server.get_prompt()(handle_get_prompt)
-
-# 註冊工具處理器
+# 在這裡註冊您的工具
+# 例如：
 server.list_tools()(handle_list_tools)
-server.call_tool()(handle_call_tool)
+server.call_tool()(handle_hello_world)
 
 async def main():
     """
