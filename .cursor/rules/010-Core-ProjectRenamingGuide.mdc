@@ -1,0 +1,71 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+## SouthAsia MCP 工具專案重新命名指南
+
+如果你需要將整個 "SouthAsia" MCP 工具專案（包括其 Python 套件、命令行工具和相關配置）重新命名為一個新的名稱（例如 "NewToolName"），請遵循以下步驟。這是一個比較複雜的操作，請務必仔細檢查每個步驟。
+
+**假設新名稱為 `NewToolName`，對應的小寫名稱為 `newtoolname`。**
+
+1.  **修改主要原始碼目錄**:
+    *   將 `src/southasia/` 資料夾重新命名為 `src/newtoolname/`。
+
+2.  **修改 `pyproject.toml`**:
+    *   將 `[project]` 下的 `name = "southasia"` 改為 `name = "newtoolname"`。
+    *   將 `[project.scripts]` 下的 `southasia = "southasia:main"` 改為 `newtoolname = "newtoolname.server:main"` (假設你的主入口點仍在 `server.py` 中)。
+
+3.  **修改 `src/newtoolname/server.py`** (原 `src/southasia/server.py`):
+    *   修改 `MCP_TOOL_NAME = "SouthAsia"` 為 `MCP_TOOL_NAME = "NewToolName"`。
+    *   修改 `MCP_TOOL_NAME_LOWERCASE` 的賦值（雖然它會自動生成，但檢查一下沒壞處）。
+    *   檢查 `HANDLERS` 列表中的 `prefixes`。如果你的工具命名慣例包含專案名 (例如 `"mcp_southAsia_..."`)，需要將其更新為新名稱 (例如 `"mcp_newToolName_..."`)。
+    *   檢查 `server = Server(MCP_TOOL_NAME)` 是否使用了更新後的常數。
+    *   檢查 `InitializationOptions(server_name=MCP_TOOL_NAME, ...)` 是否使用了更新後的常數。
+    *   檢查 `main` 函數入口點：`if __name__ == "__main__":` 中的日誌訊息。
+
+4.  **修改 `src/newtoolname/__init__.py`** (原 `src/southasia/__init__.py`):
+    *   如果裡面有任何程式碼明確 `import southasia` 或引用了舊模組名，需要更新為 `import newtoolname`。
+
+5.  **修改 `README.md`**:
+    *   **全局搜索並替換**：將所有出現的 "southasia" 和 "southAsia" (以及可能的其他變體) 替換為 "newtoolname" 和 "NewToolName"。
+    *   特別注意檢查：
+        *   安裝指示中的命令行範例。
+        *   `mcp.json` 配置範例。
+        *   專案結構說明。
+        *   示例程式碼中的工具名稱（如果它們遵循了包含專案名的模式）。
+
+6.  **重新生成 `uv.lock`**:
+    *   **不要**手動編輯 `uv.lock`。
+    *   在修改完 `pyproject.toml` 後，刪除舊的 `uv.lock` (可選但推薦)。
+    *   在你的虛擬環境中，運行以下命令之一來重新生成鎖定檔案：
+        *   `uv pip sync` (如果只想安裝 `pyproject.toml` 中的依賴)
+        *   `uv pip compile pyproject.toml -o uv.lock` (如果只想重新生成鎖定檔)
+        *   `pip install -e .` (如果使用 pip，它通常也會更新依賴狀態，但不直接生成 `uv.lock`，uv 更適合)
+    *   檢查新生成的 `uv.lock` 中是否包含 `[[package]] name = "newtoolname" ... source = { editable = "." }`。
+
+7.  **更新 Cursor 設定 (`%USERPROFILE%\.cursor\mcp.json`)**:
+    *   找到原來的 `"southAsia": { ... }` 區塊。
+    *   將其鍵名從 `"southAsia"` 改為 `"NewToolName"`。
+    *   將 `args` 列表中的命令行工具名稱從 `"southasia"` 改為 `"newtoolname"` (對應 `pyproject.toml` 中 `[project.scripts]` 的設定)。
+    *   修改後的範例如下：
+      ```json
+      {
+        "NewToolName": {
+          "command": "cmd",
+          "args": [
+            "/c",
+            "newtoolname"
+          ]
+        }
+      }
+      ```
+
+8.  **重新安裝與測試**:
+    *   確保你的虛擬環境是激活的。
+    *   運行 `pip install -e .` (或 `uv pip install -e .`) 來安裝修改後的專案。
+    *   **重啟 Cursor** 以確保 `mcp.json` 的變更生效。
+    *   嘗試在 Cursor 中調用你的工具 (使用新的前綴和名稱，例如 `@NewToolName mcp_newToolName_hello_world`)，確保一切正常工作。
+
+這個過程比較繁瑣，建議在版本控制系統（如 Git）中進行，方便追蹤變更和回退。
+

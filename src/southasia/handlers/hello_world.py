@@ -11,7 +11,7 @@ async def handle_list_tools() -> List[types.Tool]:
     """
     return [
         types.Tool(
-            name="hello_world",
+            name="mcp_hello_world",
             description="A simple demonstration tool that returns a greeting message",
             inputSchema={
                 "type": "object",
@@ -25,7 +25,7 @@ async def handle_list_tools() -> List[types.Tool]:
             },
         ),
         types.Tool(
-            name="hello_name",
+            name="mcp_hello_name",
             description="A demonstration tool that greets you by name",
             inputSchema={
                 "type": "object",
@@ -54,15 +54,15 @@ async def handle_call_tool(
     返回值:
         包含執行結果的內容列表（可以是文字、圖片或嵌入資源）
     """
-    if name == "hello_world":
+    if name == "mcp_hello_world":
         return [
             types.TextContent(
                 type="text",
-                text="Hello World! 這是您的第一個 SouthAsia 工具！"
+                text="Hello World! 這是您的第一個 mcp 工具！"
             )
         ]
     
-    elif name == "hello_name":
+    elif name == "mcp_hello_name":
         user_name = arguments.get("name")
         if not user_name:
             raise ValueError("缺少名字參數")

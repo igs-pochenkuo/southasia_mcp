@@ -1,0 +1,88 @@
+---
+description: 提供在 southasia 專案中建立新的 Python MCP 工具 Handler 的步驟與建議。
+globs: src/southasia/**/*.py
+alwaysApply: false
+---
+你好！看起來你正在建立或修改一個 Python MCP 工具處理程序 (Handler)。請參考以下指南來確保一致性：
+
+1.  **檔案結構**:
+    *   在 `src/southasia/handlers/` 目錄下為你的工具集建立一個新的 Python 檔案 (例如 `my_tool_handler.py`)。
+
+2.  **定義工具列表 (`handle_list_tools`)**:
+    *   在此檔案中，建立一個名為 `handle_list_tools` 的 `async` 函數。
+    *   此函數**必須**返回一個 `List[types.Tool]` (從 `mcp.types` 導入)。
+    *   每個 `types.Tool` 實例需要定義：
+        *   `name`: 工具的唯一名稱。建議遵循 `mcp_{專案名小寫}_{功能}` 或 `mcp_{功能}` 的模式 (需與 `server.py` 中 `HANDLERS` 的 `prefixes` 匹配)。例如：`mcp_southAsia_file_read` 或 `mcp_file_read`。
+        *   `description`: 清晰描述工具的功能。
+        *   `inputSchema`: 使用 JSON Schema 定義工具所需的參數。如果不需要參數，可以定義一個必要的虛擬參數 (參考 `hello_world.py` 中的 `mcp_hello_world`)。
+
+3.  **實現工具調用 (`handle_call_tool`)**:
+    *   建立一個名為 `handle_call_tool` 的 `async` 函數，接收 `name: str` 和 `arguments: Optional[Dict]` 作為參數。
+    *   此函數**必須**返回 `List[types.TextContent | types.ImageContent | types.EmbeddedResource]` (從 `mcp.types` 導入)。
+    *   在函數內部，使用 `if/elif/else` 結構根據傳入的 `name` 來區分並執行不同的工具邏輯。
+    *   從 `arguments` 字典中獲取所需的參數，並進行必要的驗證。
+    *   使用 `types.TextContent`, `types.ImageContent`, 或 `types.EmbeddedResource` 來建構返回結果。
+    *   **必須**處理 `name` 不匹配任何已知工具的情況 (例如，引發 `ValueError`)。
+
+4.  **註冊處理程序 (`server.py`)**:
+    *   在 `src/southasia/server.py` 中導入你的新 handler 模組。
+    *   將你的 handler 加入到 `HANDLERS` 列表中，提供：
+        *   `prefixes`: 一個包含你的工具名稱前綴的列表 (例如 `["mcp_southAsia_mytool", "mcp_mytool"]`)。伺服器會用此前綴來路由請求。
+        *   `list_tools`: 指向你的 `handle_list_tools` 函數。
+        *   `call_tool`: 指向你的 `handle_call_tool` 函數。
+
+5.  **型別提示和日誌**:
+    *   盡可能使用 Python 的型別提示 (Type Hinting)。
+    *   考慮使用 `server.py` 中配置的 `logger` 來記錄重要的執行資訊或錯誤。
+
+**範例參考**:
+
+*   `src/southasia/handlers/hello_world.py`：一個簡單的 Handler 範例。
+*   `src/southasia/server.py`：查看 `HANDLERS` 列表如何註冊。
+
+遵循這些步驟可以幫助確保新工具與現有架構整合順暢。祝你開發順利！
+
+---
+
+**給 AI 助手的指示：**
+
+當開發者請求建立一個新的 MCP 工具時，請**主動**使用以下問題來引導對話，收集必要的資訊，以便協助完成工具的開發：
+
+1.  **工具目標**：
+    *   「這個新工具的主要功能是什麼？它要解決什麼問題或完成什麼任務？」
+    *   「它需要與外部服務、檔案系統或其他資源互動嗎？」
+
+2.  **工具命名**：
+    *   「你希望這個工具叫什麼名字？（例如：`read_config_file`）」
+    *   「我們應該使用哪些前綴來註冊這個工具？（例如：`mcp_southAsia_` 和/或 `mcp_`，這會影響 `server.py` 中的 `HANDLERS` 設定）」
+    *   *(AI 註：如果開發者詢問如何更改基礎專案名稱本身，例如更改 `mcp_southAsia_` 中的 `southAsia`，請參考 `@010-Core-ProjectRenamingGuide.mdc` 中的詳細步驟。)*
+
+3.  **輸入參數**：
+    *   「這個工具需要接收哪些輸入參數？」
+    *   對於每個參數，請確認：
+        *   「參數名稱是什麼？（例如：`file_path`）」
+        *   「參數的資料類型是什麼？（例如：`string`, `integer`, `boolean`, `array`, `object`）」
+        *   「這個參數的用途是什麼？（簡短描述）」
+        *   「這個參數是必需的 (required) 還是可選的 (optional)？」
+
+4.  **輸出結果**：
+    *   「工具成功執行後，應該回傳什麼樣的結果？（例如：純文字、檔案內容、結構化數據等）」
+    *   「回傳結果的格式是什麼？（例如：`types.TextContent`, `types.ImageContent` 等）」
+
+5.  **實作細節**：
+    *   「工具的處理邏輯大概是怎麼樣的？有沒有特別需要注意的步驟或演算法？」
+    *   「是否需要引入任何標準函式庫以外的 Python 套件？」
+
+6.  **Handler 檔案**：
+    *   「你希望將這個新工具的程式碼放在哪個 Handler 檔案中？是建立一個新的檔案（例如 `src/southasia/handlers/config_handler.py`），還是加入到現有的 Handler 檔案中？」
+
+在收集完這些資訊後，再開始協助開發者編寫 `handle_list_tools` 和 `handle_call_tool` 的程式碼，並提醒他們更新 `server.py` 中的 `HANDLERS` 列表。
+
+
+
+
+
+
+
+
+

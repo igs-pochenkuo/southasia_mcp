@@ -1,184 +1,131 @@
-# SouthAsia MCP Tool
+# SouthAsia MCP 工具
 
-這是一個基於 MCP (Model Control Protocol) 框架的工具開發模板。
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 工具名稱配置
+歡迎使用 SouthAsia MCP 工具專案！這是一個基於 [MCP (Model Control Protocol)](https://microsoft.github.io/language-server-protocol/specifications/mcp/)-like 框架的工具集，旨在**擴充 AI 助理（例如 Cursor）的功能**，使其能夠執行更複雜、更貼近本地開發環境的任務。
 
-如果您想要更改工具名稱（預設為 "southAsia"），需要修改以下位置：
+這個儲存庫可以作為您開發自訂 MCP 工具的**模板和起點**。
 
-1. `src/southasia/server.py` 中的常量配置：
-```python
-MCP_TOOL_NAME = "southAsia"  # 更改此處以修改工具名稱
-```
+## ✨ 功能特色
 
-2. `pyproject.toml` 中的命令行工具名稱（使用小寫）：
-```toml
-[project.scripts]
-southasia = "southasia.server:main"  # 更改 "southasia" 為您想要的名稱
-```
+目前包含以下範例工具 (在 `hello_world` handler 中)：
 
-3. Cursor 配置文件中的工具名稱：
-```json
-{
-  "southAsia": {  // 更改此處為您的工具名稱
-    "command": "cmd",
-    "args": [
-      "/c",
-      "southasia"  // 更改此處為您的命令行工具名稱
-    ]
-  }
-}
-```
+*   `mcp_hello_world`: 一個簡單的工具，返回固定的問候語。
+*   `mcp_hello_name`: 接收一個 `name` 參數，並返回包含該名字的問候語。
 
-注意：
-- 工具名稱區分大小寫
-- 命令行工具名稱建議使用小寫
-- 修改後需要重新安裝套件並重啟 Cursor
+您可以輕易地擴充此專案，加入更多實用的工具！
 
-## 分支說明
+## 🚀 開始使用
 
-- `main`: 主分支，包含完整的筆記管理工具實現
-- `empty`: 空白分支，僅包含基本框架和 Hello World 示例工具，適合開始新工具開發
+### 1. 環境準備
 
-## 安裝說明
+*   **Git**: 用於克隆儲存庫。
+*   **Python**: 版本需 >= 3.10。
+*   **(推薦) uv**: 一個快速的 Python 套件安裝與管理工具 ([安裝指南](https://github.com/astral-sh/uv))。如果沒有 `uv`，也可以使用 Python 內建的 `venv` 和 `pip`。
 
-1. 創建並激活虛擬環境：
-```powershell
-# 在 southAsia 目錄下
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
+### 2. 安裝步驟
 
-2. 安裝開發版本：
-```powershell
+```bash
+# 1. 克隆儲存庫
+git clone <您的儲存庫 URL>
+cd southAsia_Tool # 進入專案目錄
+
+# 2. 建立並啟用虛擬環境
+# 使用 uv (推薦)
+uv venv
+source .venv/bin/activate  # Linux/macOS
+# 或者 .\.venv\Scripts\Activate.ps1  # Windows PowerShell
+# 或者 .\.venv\Scripts\activate.bat # Windows Cmd
+
+# 使用 Python 內建 venv
+# python -m venv .venv
+# source .venv/bin/activate  # Linux/macOS
+# 或者 .\.venv\Scripts\Activate.ps1  # Windows PowerShell
+# 或者 .\.venv\Scripts\activate.bat # Windows Cmd
+
+# 3. 安裝依賴
+# 使用 uv (推薦)
+uv pip sync pyproject.toml
+
+# 4. 使用 pip 編譯工具
 pip install -e .
 ```
 
-3. 在 Cursor 中配置 MCP 工具：
-   - 打開 Cursor 的設定檔案：`%USERPROFILE%\.cursor\mcp.json`
-   - 添加以下配置：
-```json
-{
-  "southAsia": {
-    "command": "cmd",
-    "args": [
-      "/c",
-      "southasia"
-    ]
-  }
-}
+### 3. 設定 Cursor MCP 工具
+
+1.  **找到 Cursor 設定檔**:
+    *   通常位於使用者家目錄下的 `.cursor` 資料夾中。
+    *   Windows: `%USERPROFILE%\.cursor\mcp.json`
+    *   macOS/Linux: `~/.cursor/mcp.json`
+2.  **編輯 `mcp.json`**:
+    *   如果檔案不存在，請建立它。
+    *   加入以下內容 (如果已有其他工具，請確保 JSON 格式正確)：
+
+    ```json
+    {
+      "southAsia": {
+        "command": "cmd", // 或 "bash", "zsh" 等，依您的系統
+        "args": [
+          "/c", // Windows cmd 的參數，bash/zsh 通常不需要
+          "southasia" // 對應 pyproject.toml 中定義的命令名稱
+        ]
+      }
+    }
+    ```
+    *   **重要**:
+        *   `"southAsia"`: 這是你在 Cursor 中 `@` 後面輸入的工具名稱，必須與 `server.py` 中的 `MCP_TOOL_NAME` (或您修改後的名稱) **大小寫一致**。
+        *   `"southasia"`: 這是您在步驟 2 安裝後可在終端運行的命令，對應 `pyproject.toml` 中 `[project.scripts]` 的設定 (建議小寫)。
+        *   `command` 和 `args`: 請根據您的作業系統和 Shell 調整。Windows PowerShell 可能需要不同的參數。
+3.  **重啟 Cursor**: 關閉並重新開啟 Cursor 以載入新的 MCP 工具設定。
+
+### 4. 測試安裝
+
+在 Cursor 的聊天視窗中輸入：
+
 ```
-   - 重啟 Cursor 使配置生效
-
-4. 運行服務器(測試)：
-```powershell
-# 方法 1：使用安裝的命令
-southasia
-
-# 方法 2：直接運行模組
-python -m southasia.server
-```
-
-5. 測試安裝：
-   - 在 Cursor 中輸入指令：`@southAsia hello_world`
-   - 如果看到問候訊息，表示安裝成功
-
-## 專案結構
-
-```
-src/southasia/
-├── __init__.py          # 入口點
-├── server.py            # 服務器配置
-├── handlers/            # 請求處理
-│   ├── __init__.py
-│   └── hello_world.py   # Hello World 示例工具
-├── models/              # 資料模型（可選）
-│   └── __init__.py
-└── services/           # 業務邏輯（可選）
-    └── __init__.py
+@southAsia mcp_hello_world
 ```
 
-## 開發新工具
+如果看到類似 "Hello World! 這是您的第一個 SouthAsia 工具！" 的回應，表示安裝和設定成功！
 
-請參考 [`Tool_GUIDE.md`](Tool_GUIDE.md) 了解如何開發新的工具。基本步驟如下：
+您也可以測試帶參數的工具：
 
-1. 在 `handlers` 目錄下創建新的處理器文件
-2. 實現工具的處理邏輯
-3. 在 `handle_list_tools()` 中註冊工具
-4. 在 `server.py` 中導入和註冊處理器
-
-### Hello World 示例
-
-`hello_world.py` 提供了一個簡單的示例工具實現：
-
-```python
-from typing import Dict, Any
-from mcp.server.models import types
-
-# 工具列表
-def handle_list_tools() -> list[types.Tool]:
-    """返回可用工具列表"""
-    return [
-        types.Tool(
-            name="mcp_southAsia_hello_world",
-            description="A simple demonstration tool that returns a greeting message",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "random_string": {
-                        "type": "string",
-                        "description": "Dummy parameter for no-parameter tools"
-                    }
-                },
-                "required": ["random_string"],
-            },
-        ),
-        # 可以在這裡添加更多工具...
-    ]
-
-async def handle_call_tool(tool_name: str, params: Dict[str, Any]) -> Dict[str, Any]:
-    """處理工具調用"""
-    if tool_name == "mcp_southAsia_hello_world":
-        return {
-            "message": "Hello World! 這是您的第一個 SouthAsia 工具！"
-        }
-    
-    raise ValueError(f"未知的工具：{tool_name}")
+```
+@southAsia mcp_hello_name name="工程師"
 ```
 
-這個示例展示了：
+## 🔧 使用方法
 
-1. 如何定義工具列表（`handle_list_tools`）
-2. 如何處理工具調用（`handle_call_tool`）
-3. 如何進行參數驗證和錯誤處理
+在 Cursor 中，您可以透過 `@<工具集名稱>` (預設是 `@southAsia`) 來呼叫此 MCP 工具提供的功能。
 
-## 開發建議
+*   **基本語法**: `@<工具集名稱> <工具名稱> [參數]`
+*   **範例**:
+    *   `@southAsia mcp_hello_world`
+    *   `@southAsia mcp_hello_name name="您的名字"`
 
-1. 遵循模組化結構：
-   - 工具處理器放在 `handlers/` 目錄
-   - 如需要，可以添加模型到 `models/` 目錄
-   - 如需要，可以添加服務到 `services/` 目錄
+當您加入更多工具後，可以用同樣的方式呼叫它們。
 
-2. 代碼品質：
-   - 添加適當的錯誤處理
-   - 保持代碼結構清晰
-   - 添加詳細的註釋
-   - 使用類型提示
+## 💻 開發新工具
 
-3. 測試：
-   - 確保新功能正常工作
-   - 測試錯誤處理
-   - 驗證與現有功能的兼容性
+想要擴充這個工具集嗎？
 
-## 注意事項
+1.  **主要結構**:
+    *   `src/southasia/handlers/`: 存放工具處理邏輯的 Python 檔案。每個檔案可以包含一組相關的工具。
+    *   `src/southasia/server.py`: MCP 伺服器的主要設定檔，您需要在此處註冊新的 Handler。
+2.  **開發指南**:
+    *   我們為您準備了詳細的開發指南！在 Cursor 中，當您編輯 `src/southasia/handlers/` 目錄下的 Python 檔案時，會自動載入 `@100-Lang-PythonMCPHandlerGuide.mdc` 規則，其中包含了建立新工具的步驟和建議。
+    *   您也可以直接在 Cursor 中 `@100-Lang-PythonMCPHandlerGuide.mdc` 來查閱。
+3.  **基本步驟**:
+    *   在 `handlers` 目錄下建立新的 `.py` 檔案 (例如 `my_tools.py`)。
+    *   在檔案中實作 `handle_list_tools` (定義工具) 和 `handle_call_tool` (處理呼叫) 函數。
+    *   在 `server.py` 中導入您的 Handler 並將其加入 `HANDLERS` 列表。
 
-1. 所有更改都需要重啟服務器才能生效
-2. 確保在虛擬環境中進行開發
-3. 遵循現有的模組化結構
-4. 保持代碼風格一致
+## ✏️ 重新命名專案
 
-## 相關文件
+如果您不想使用 "southAsia" 這個名稱，可以將整個專案重新命名。這是一個比較進階的操作，涉及修改多個檔案和設定。
 
-- [`Tool_GUIDE.md`](Tool_GUIDE.md): 詳細的工具開發指南
-- `src/southasia/handlers/hello_world.py`: 示例工具實現
-- `src/southasia/server.py`: 服務器配置和工具註冊
+詳細步驟請參考專案內的 MDC 規則：在 Cursor 中 `@010-Core-ProjectRenamingGuide.mdc`。
+
+## 📄 授權條款
+
+本專案採用 MIT 授權條款。

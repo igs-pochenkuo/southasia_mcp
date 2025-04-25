@@ -24,13 +24,50 @@ server = Server(MCP_TOOL_NAME)
 
 # 在這裡導入您的工具處理器
 # 例如：
-from .handlers.hello_world import handle_list_tools, handle_call_tool
+from .handlers.hello_world import handle_list_tools as hello_world_list_tools
+from .handlers.hello_world import handle_call_tool as hello_world_call_tool
+from .handlers.file_editor import handle_list_tools as file_editor_list_tools
+from .handlers.file_editor import handle_call_tool as file_editor_call_tool
+
+# 定義處理器模組及其對應的前綴和處理函數
+HANDLERS = [
+    {
+        "prefixes": ["mcp_hello"],
+        "list_tools": hello_world_list_tools,
+        "call_tool": hello_world_call_tool
+    }
+]
+
+# 定義一個合併處理器的函數
+async def combined_list_tools():
+    """
+    合併所有工具處理器的工具列表
+    """
+    tools = []
+    for handler in HANDLERS:
+        tools.extend(await handler["list_tools"]())
+    return tools
+
+async def combined_call_tool(name, arguments):
+    """
+    根據工具名稱調用對應的處理器
+    """
+    # 根據工具名稱前綴決定使用哪個處理器
+    for handler in HANDLERS:
+        for prefix in handler["prefixes"]:
+            if name.startswith(prefix):
+                logger.info(f"找到工具 '{name}' 的匹配前綴 '{prefix}'")
+                return await handler["call_tool"](name, arguments)
+    
+    # 如果沒有匹配到任何前綴，使用默認處理器
+    logger.warning(f"未找到工具 '{name}' 的前綴匹配，使用默認處理器")
+    return await HANDLERS[0]["call_tool"](name, arguments)
 
 # 註冊工具列表處理器
-server.list_tools()(handle_list_tools)
+server.list_tools()(combined_list_tools)
 
 # 註冊工具調用處理器
-server.call_tool()(handle_call_tool)
+server.call_tool()(combined_call_tool)
 
 async def main():
     """
