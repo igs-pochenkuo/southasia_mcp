@@ -126,6 +126,19 @@ pip install -e .
 
 詳細步驟請參考專案內的 MDC 規則：在 Cursor 中 `@010-Core-ProjectRenamingGuide.mdc`。
 
+## ❓ 故障排除提示
+
+如果在安裝、設定或使用過程中遇到問題，可以嘗試以下步驟：
+
+*   **確認虛擬環境**: 確保你已經在專案的虛擬環境中執行安裝和運行命令。
+*   **檢查 Cursor 設定 (`mcp.json`)**:
+    *   仔細核對工具集名稱 (例如 `"southAsia"`) 是否與 `server.py` 中的 `MCP_TOOL_NAME` **大小寫完全一致**。
+    *   確認 `args` 中的命令行工具名稱 (例如 `"southasia"`) 是否與 `pyproject.toml` 中 `[project.scripts]` 定義的**大小寫完全一致**。
+    *   檢查 `command` 和 `args` 是否適合你的作業系統和 Shell 環境。
+*   **手動運行服務器**: 在**已啟用虛擬環境**的終端中，直接運行 `southasia` (或你修改後的命令)。觀察是否有任何錯誤訊息或日誌輸出。這有助於判斷 MCP 服務本身是否能正常啟動。
+*   **檢查 Cursor 輸出**: 查看 Cursor 的「輸出」(Output) 面板，有時 MCP 相關的錯誤會顯示在那裡。
+*   **重啟 Cursor**: 在修改 `mcp.json` 或重新安裝後，務必重啟 Cursor。
+
 ## 📄 授權條款
 
 本專案採用 MIT 授權條款。
