@@ -26,8 +26,6 @@ server = Server(MCP_TOOL_NAME)
 # 例如：
 from .handlers.hello_world import handle_list_tools as hello_world_list_tools
 from .handlers.hello_world import handle_call_tool as hello_world_call_tool
-from .handlers.file_editor import handle_list_tools as file_editor_list_tools
-from .handlers.file_editor import handle_call_tool as file_editor_call_tool
 
 # 定義處理器模組及其對應的前綴和處理函數
 HANDLERS = [
