@@ -20,65 +20,104 @@
 ### 1. 環境準備
 
 *   **Git**: 用於克隆儲存庫。
-*   **Python**: 版本需 >= 3.10。
-*   **(推薦) uv**: 一個快速的 Python 套件安裝與管理工具 ([安裝指南](https://github.com/astral-sh/uv))。如果沒有 `uv`，也可以使用 Python 內建的 `venv` 和 `pip`。
+*   **Python**: 版本需 >= 3.8。
+*   **MCP SDK**: 官方 MCP 開發套件。
 
 ### 2. 安裝步驟
 
 ```bash
 # 1. 克隆儲存庫
-git clone <您的儲存庫 URL>
-cd southAsia_Tool # 進入專案目錄
+git clone https://github.com/igs-pochenkuo/southasia_mcp.git
+cd southasia_mcp # 進入專案目錄
 
 # 2. 建立並啟用虛擬環境
-# 使用 uv (推薦)
-uv venv
+python -m venv .venv
 source .venv/bin/activate  # Linux/macOS
 # 或者 .\.venv\Scripts\Activate.ps1  # Windows PowerShell
 # 或者 .\.venv\Scripts\activate.bat # Windows Cmd
 
-# 使用 Python 內建 venv
-# python -m venv .venv
-# source .venv/bin/activate  # Linux/macOS
-# 或者 .\.venv\Scripts\Activate.ps1  # Windows PowerShell
-# 或者 .\.venv\Scripts\activate.bat # Windows Cmd
-
 # 3. 安裝依賴
-# 使用 uv (推薦)
-uv pip sync pyproject.toml
-
-# 4. 使用 pip 編譯工具
-pip install -e .
+pip install -r requirements.txt
 ```
 
-### 3. 設定 Cursor MCP 工具
+### 3. 使用方式
 
-1.  **找到 Cursor 設定檔**:
-    *   通常位於使用者家目錄下的 `.cursor` 資料夾中。
-    *   Windows: `%USERPROFILE%\.cursor\mcp.json`
-    *   macOS/Linux: `~/.cursor/mcp.json`
-2.  **編輯 `mcp.json`**:
-    *   如果檔案不存在，請建立它。
-    *   加入以下內容 (如果已有其他工具，請確保 JSON 格式正確)：
+本專案提供兩種使用方式：
 
-    ```json
-    {
-      "southAsia": {
-        "command": "cmd", // 或 "bash", "zsh" 等，依您的系統
-        "args": [
-          "/c", // Windows cmd 的參數，bash/zsh 通常不需要
-          "southasia" // 對應 pyproject.toml 中定義的命令名稱
-        ]
-      }
-    }
-    ```
-    *   **重要**:
-        *   `"southAsia"`: 這是你在 Cursor 中 `@` 後面輸入的工具名稱，必須與 `server.py` 中的 `MCP_TOOL_NAME` (或您修改後的名稱) **大小寫一致**。
-        *   `"southasia"`: 這是您在步驟 2 安裝後可在終端運行的命令，對應 `pyproject.toml` 中 `[project.scripts]` 的設定 (建議小寫)。
-        *   `command` 和 `args`: 請根據您的作業系統和 Shell 調整。Windows PowerShell 可能需要不同的參數。
-3.  **重啟 Cursor**: 關閉並重新開啟 Cursor 以載入新的 MCP 工具設定。
+#### 方式一：使用 FastAPI 網頁應用程式
 
-### 4. 測試安裝
+這是推薦的使用方式，提供了直觀的網頁界面和 API 端點。
+
+```bash
+# 啟動網頁應用程式
+python new_web_app.py
+```
+
+啟動後，打開瀏覽器訪問 http://localhost:12001 即可使用網頁界面。
+
+#### 方式二：使用傳統命令行工具
+
+如果您偏好命令行方式，可以使用以下步驟：
+
+```bash
+# 安裝為命令行工具
+pip install -e .
+
+# 使用命令行工具
+southasia
+```
+
+### 4. 在 Cursor 中使用 MCP
+
+#### 方式一：使用 FastAPI 網頁應用程式（推薦）
+
+1. **啟動 MCP 服務**：
+   ```bash
+   python new_web_app.py
+   ```
+
+2. **配置 Cursor**：
+   - 打開 Cursor 編輯器
+   - 進入設置 (Settings)，找到 "AI" 或 "Extensions" 部分
+   - 在 "Local MCP Studio" 或 "MCP 設置" 中，配置以下參數：
+     - MCP 服務地址：`http://localhost:12001`
+     - 啟用本地 MCP 服務：開啟
+
+3. **測試連接**：
+   - 在 Cursor 中打開命令面板 (通常是 Cmd/Ctrl+Shift+P)
+   - 輸入 "Test MCP Connection" 或 "測試 MCP 連接"
+   - 如果配置正確，應該會看到成功連接的提示
+
+#### 方式二：使用傳統命令行工具
+
+1. **找到 Cursor 設定檔**:
+   - 通常位於使用者家目錄下的 `.cursor` 資料夾中。
+   - Windows: `%USERPROFILE%\.cursor\mcp.json`
+   - macOS/Linux: `~/.cursor/mcp.json`
+
+2. **編輯 `mcp.json`**:
+   - 如果檔案不存在，請建立它。
+   - 加入以下內容 (如果已有其他工具，請確保 JSON 格式正確)：
+
+   ```json
+   {
+     "southAsia": {
+       "command": "cmd", // 或 "bash", "zsh" 等，依您的系統
+       "args": [
+         "/c", // Windows cmd 的參數，bash/zsh 通常不需要
+         "southasia" // 對應 pyproject.toml 中定義的命令名稱
+       ]
+     }
+   }
+   ```
+   - **重要**:
+       - `"southAsia"`: 這是你在 Cursor 中 `@` 後面輸入的工具名稱，必須與 `server.py` 中的 `MCP_TOOL_NAME` (或您修改後的名稱) **大小寫一致**。
+       - `"southasia"`: 這是您在步驟 2 安裝後可在終端運行的命令，對應 `pyproject.toml` 中 `[project.scripts]` 的設定 (建議小寫)。
+       - `command` 和 `args`: 請根據您的作業系統和 Shell 調整。Windows PowerShell 可能需要不同的參數。
+
+3. **重啟 Cursor**: 關閉並重新開啟 Cursor 以載入新的 MCP 工具設定。
+
+### 5. 測試 MCP 工具
 
 在 Cursor 的聊天視窗中輸入：
 
@@ -86,7 +125,7 @@ pip install -e .
 @southAsia mcp_hello_world
 ```
 
-如果看到類似 "Hello World! 這是您的第一個 SouthAsia 工具！" 的回應，表示安裝和設定成功！
+或者，如果您使用的是網頁應用程式方式，可以直接在網頁界面上點擊「執行」按鈕測試工具。
 
 您也可以測試帶參數的工具：
 
@@ -130,14 +169,37 @@ pip install -e .
 
 如果在安裝、設定或使用過程中遇到問題，可以嘗試以下步驟：
 
+### 一般問題
+
 *   **確認虛擬環境**: 確保你已經在專案的虛擬環境中執行安裝和運行命令。
-*   **檢查 Cursor 設定 (`mcp.json`)**:
+*   **檢查 Cursor 設定**:
     *   仔細核對工具集名稱 (例如 `"southAsia"`) 是否與 `server.py` 中的 `MCP_TOOL_NAME` **大小寫完全一致**。
     *   確認 `args` 中的命令行工具名稱 (例如 `"southasia"`) 是否與 `pyproject.toml` 中 `[project.scripts]` 定義的**大小寫完全一致**。
     *   檢查 `command` 和 `args` 是否適合你的作業系統和 Shell 環境。
-*   **手動運行服務器**: 在**已啟用虛擬環境**的終端中，直接運行 `southasia` (或你修改後的命令)。觀察是否有任何錯誤訊息或日誌輸出。這有助於判斷 MCP 服務本身是否能正常啟動。
 *   **檢查 Cursor 輸出**: 查看 Cursor 的「輸出」(Output) 面板，有時 MCP 相關的錯誤會顯示在那裡。
-*   **重啟 Cursor**: 在修改 `mcp.json` 或重新安裝後，重啟 Cursor。
+*   **重啟 Cursor**: 在修改設定或重新安裝後，重啟 Cursor。
+
+### 網頁應用程式特定問題
+
+*   **端口被占用**:
+    *   使用不同的端口啟動應用程式：`PORT=12002 python new_web_app.py`
+    *   或終止占用端口的進程後重試
+
+*   **MCP SDK 版本兼容性問題**:
+    *   如果遇到 `AttributeError: 'FastMCP' object has no attribute 'xxx'` 錯誤，這是由於不同版本的 MCP SDK API 差異導致
+    *   本應用程式已內建兼容性處理，但如果仍然遇到問題，請檢查您的 MCP SDK 版本並參考相應文檔
+    *   您可以嘗試更新到最新版本的 MCP SDK：`pip install --upgrade mcp`
+
+*   **asyncio 衝突問題**:
+    *   如果遇到 `Already running asyncio in this thread` 錯誤，這是因為 FastAPI 和 FastMCP 都使用 asyncio 事件循環導致的衝突
+    *   最新版本的應用程式已使用多進程代替多線程來啟動 MCP 服務，解決了這個問題
+    *   如果仍然遇到問題，請嘗試重新安裝 MCP SDK：`pip uninstall mcp -y && pip install mcp`
+
+### 命令行工具特定問題
+
+*   **手動運行服務器**: 在**已啟用虛擬環境**的終端中，直接運行 `southasia` (或你修改後的命令)。觀察是否有任何錯誤訊息或日誌輸出。這有助於判斷 MCP 服務本身是否能正常啟動。
+*   **檢查依賴安裝**: 確保所有依賴都已正確安裝，可以嘗試重新運行 `pip install -e .`。
+*   **檢查 Python 版本**: 確保您使用的 Python 版本符合要求 (>= 3.8)。
 
 ## 📄 授權條款
 
