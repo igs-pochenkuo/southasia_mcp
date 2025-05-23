@@ -479,10 +479,22 @@ async def call_tool(request: ToolRequest):
             raise HTTPException(status_code=400, detail=f"未知的工具: {tool_name}")
         
         # 從結果中提取文本
-        if result and hasattr(result[0], "text"):
-            return {"result": result[0].text}
-        else:
-            return {"result": "工具執行成功，但沒有返回文本結果"}
+        if result:
+            # 處理不同版本的 MCP SDK 可能返回的不同結果格式
+            if isinstance(result, list) and len(result) > 0:
+                if hasattr(result[0], "text"):
+                    return {"result": result[0].text}
+                elif isinstance(result[0], dict) and "text" in result[0]:
+                    return {"result": result[0]["text"]}
+                elif isinstance(result[0], str):
+                    return {"result": result[0]}
+            elif isinstance(result, dict) and "text" in result:
+                return {"result": result["text"]}
+            elif isinstance(result, str):
+                return {"result": result}
+            
+        # 如果無法提取文本，返回通用消息
+        return {"result": "工具執行成功，但無法解析結果格式"}
     except Exception as e:
         logger.error(f"調用工具 {tool_name} 時出錯: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
