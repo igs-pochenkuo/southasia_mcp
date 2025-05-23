@@ -347,8 +347,8 @@ def run_mcp_server():
         
         # 啟動 FastMCP 服務器
         async def start_server():
-            # 確保已經初始化 HTTP 應用程序
-            from src.southasia.fast_server import http_app
+            # 不再需要導入 http_app，因為某些版本的 MCP SDK 可能不支持
+            # from src.southasia.fast_server import http_app
             
             async with mcp.session_manager.run():
                 logger.info("MCP 服務器已啟動")

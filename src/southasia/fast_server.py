@@ -20,8 +20,9 @@ logger = logging.getLogger(__name__)
 
 # 創建 FastMCP 實例
 mcp = FastMCP("SouthAsia")
-# 初始化 HTTP 應用程序
-http_app = mcp.streamable_http_app()
+# 初始化 HTTP 應用程序 (注意：某些版本的 MCP SDK 可能不支持 streamable_http_app 方法)
+# 如果您的 MCP SDK 版本不支持此方法，可以註釋掉下面這行
+# http_app = mcp.streamable_http_app()
 
 # 定義工具
 @mcp.tool(name="mcp_hello_world")
