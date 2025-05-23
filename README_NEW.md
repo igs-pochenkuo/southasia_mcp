@@ -13,8 +13,10 @@
 ## 系統需求
 
 - Python 3.8 或更高版本
-- MCP SDK 1.5.0 或更高版本
+- MCP SDK (支援多個版本)
 - FastAPI 和 Uvicorn
+
+> **注意**：本應用程式已針對不同版本的 MCP SDK 進行了兼容性優化，可以適應不同環境下的 MCP SDK 版本差異。
 
 ## 快速開始
 
@@ -184,6 +186,11 @@ async def 新工具函數(參數1: str, 參數2: int) -> List[TextContent]:
 - **端口被占用**：
   - 使用不同的端口啟動應用程式：`PORT=12002 python new_web_app.py`
   - 或終止占用端口的進程後重試
+
+- **MCP SDK 版本兼容性問題**：
+  - 如果遇到 `AttributeError: 'FastMCP' object has no attribute 'xxx'` 錯誤，這是由於不同版本的 MCP SDK API 差異導致
+  - 本應用程式已內建兼容性處理，但如果仍然遇到問題，請檢查您的 MCP SDK 版本並參考相應文檔
+  - 您可以嘗試更新到最新版本的 MCP SDK：`pip install --upgrade mcp`
 
 ## 貢獻與支持
 
