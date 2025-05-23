@@ -192,6 +192,11 @@ async def 新工具函數(參數1: str, 參數2: int) -> List[TextContent]:
   - 本應用程式已內建兼容性處理，但如果仍然遇到問題，請檢查您的 MCP SDK 版本並參考相應文檔
   - 您可以嘗試更新到最新版本的 MCP SDK：`pip install --upgrade mcp`
 
+- **asyncio 衝突問題**：
+  - 如果遇到 `Already running asyncio in this thread` 錯誤，這是因為 FastAPI 和 FastMCP 都使用 asyncio 事件循環導致的衝突
+  - 最新版本的應用程式已使用多進程代替多線程來啟動 MCP 服務，解決了這個問題
+  - 如果仍然遇到問題，請嘗試重新安裝 MCP SDK：`pip uninstall mcp -y && pip install mcp`
+
 ## 貢獻與支持
 
 歡迎提交問題報告、功能請求或貢獻代碼。請通過 GitHub Issues 或 Pull Requests 參與項目開發。
