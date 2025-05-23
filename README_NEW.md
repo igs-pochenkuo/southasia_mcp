@@ -197,6 +197,56 @@ async def 新工具函數(參數1: str, 參數2: int) -> List[TextContent]:
   - 最新版本的應用程式已使用多進程代替多線程來啟動 MCP 服務，解決了這個問題
   - 如果仍然遇到問題，請嘗試重新安裝 MCP SDK：`pip uninstall mcp -y && pip install mcp`
 
+## 在 Cursor 中使用 MCP
+
+[Cursor](https://cursor.sh/) 是一款基於 AI 的程式編輯器，您可以將本專案的 MCP 服務與 Cursor 整合，實現更強大的開發體驗。
+
+### 設置步驟
+
+1. **啟動 MCP 服務**：
+   - 首先啟動本專案的 MCP 服務：`python new_web_app.py`
+   - 確認服務正常運行在 http://localhost:12001
+
+2. **配置 Cursor**：
+   - 打開 Cursor 編輯器
+   - 進入設置 (Settings)，找到 "AI" 或 "Extensions" 部分
+   - 在 "Local MCP Studio" 或 "MCP 設置" 中，配置以下參數：
+     - MCP 服務地址：`http://localhost:12001`
+     - 啟用本地 MCP 服務：開啟
+
+3. **測試連接**：
+   - 在 Cursor 中打開命令面板 (通常是 Cmd/Ctrl+Shift+P)
+   - 輸入 "Test MCP Connection" 或 "測試 MCP 連接"
+   - 如果配置正確，應該會看到成功連接的提示
+
+### 使用方法
+
+1. **直接在編輯器中使用 MCP 工具**：
+   - 在編輯代碼時，可以通過 Cursor 的 AI 功能調用已註冊的 MCP 工具
+   - 例如，可以在命令面板中輸入 "Run MCP Tool: mcp_hello_name" 並提供參數
+
+2. **通過 Cursor 擴展 API 調用**：
+   - 如果您正在開發 Cursor 擴展，可以使用以下 API 調用 MCP 工具：
+   ```javascript
+   // 示例代碼 (JavaScript)
+   const response = await cursor.mcp.callTool("mcp_hello_name", { name: "張三" });
+   console.log(response);
+   ```
+
+3. **故障排除**：
+   - 確保 MCP 服務已啟動並正常運行
+   - 檢查 Cursor 中的 MCP 服務地址配置是否正確
+   - 如果遇到連接問題，可以嘗試重啟 MCP 服務和 Cursor
+
+### 進階整合
+
+如果您想要開發自己的 MCP 工具並在 Cursor 中使用：
+
+1. 按照前面的 "添加新工具" 部分在本專案中註冊新工具
+2. 重啟 MCP 服務以使新工具生效
+3. 在 Cursor 中刷新 MCP 工具列表 (通常在命令面板中有相應選項)
+4. 新工具將可在 Cursor 中使用
+
 ## 貢獻與支持
 
 歡迎提交問題報告、功能請求或貢獻代碼。請通過 GitHub Issues 或 Pull Requests 參與項目開發。
