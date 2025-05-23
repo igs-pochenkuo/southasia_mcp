@@ -8,6 +8,7 @@ import os
 import sys
 import threading
 import time
+import multiprocessing
 from typing import Dict, Any, Optional, List
 
 import uvicorn
@@ -35,7 +36,7 @@ app = FastAPI(title="SouthAsia MCP Web 應用程序")
 
 # MCP 服務器狀態
 mcp_server_running = False
-mcp_server_thread = None
+mcp_server_process = None
 
 # 請求模型
 class ToolRequest(BaseModel):
@@ -335,61 +336,70 @@ HTML_TEMPLATE = """
 </html>
 """
 
-# MCP 服務器線程函數
-def run_mcp_server():
-    """在單獨的線程中運行 MCP 服務器"""
-    global mcp_server_running
+# 用於進程間通信的隊列
+mcp_status_queue = multiprocessing.Queue()
+
+# MCP 服務器進程函數
+def run_mcp_server(status_queue):
+    """在單獨的進程中運行 MCP 服務器"""
+    # 配置進程的日誌
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        filename='mcp_server.log',
+        filemode='a'
+    )
+    proc_logger = logging.getLogger("mcp_process")
     
     try:
-        logger.info("啟動 MCP 服務器線程")
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        proc_logger.info("啟動 MCP 服務器進程")
+        
+        # 導入 MCP 模塊 (在進程內部導入，避免與主進程衝突)
+        from src.southasia.fast_server import mcp
+        
+        # 設置運行狀態為 True
+        status_queue.put(True)
         
         # 啟動 FastMCP 服務器
         async def start_server():
-            # 不再需要導入 http_app，因為某些版本的 MCP SDK 可能不支持
-            # from src.southasia.fast_server import http_app
-            
-            # 根據不同版本的 MCP SDK 使用不同的啟動方式
             try:
-                # 嘗試使用 session_manager (較新版本的 MCP SDK)
+                # 根據不同版本的 MCP SDK 使用不同的啟動方式
                 if hasattr(mcp, 'session_manager'):
+                    proc_logger.info("使用 session_manager 啟動 MCP 服務器")
                     async with mcp.session_manager.run():
-                        logger.info("MCP 服務器已啟動 (使用 session_manager)")
-                        mcp_server_running = True
-                        # 保持服務器運行，直到線程被終止
-                        while mcp_server_running:
+                        proc_logger.info("MCP 服務器已啟動 (使用 session_manager)")
+                        # 保持服務器運行，直到進程被終止
+                        while True:
                             await asyncio.sleep(1)
-                        logger.info("MCP 服務器正在關閉")
-                # 嘗試使用 run 方法 (可能是較舊版本的 MCP SDK)
                 elif hasattr(mcp, 'run'):
+                    proc_logger.info("使用 run 方法啟動 MCP 服務器")
                     async with mcp.run():
-                        logger.info("MCP 服務器已啟動 (使用 run 方法)")
-                        mcp_server_running = True
-                        # 保持服務器運行，直到線程被終止
-                        while mcp_server_running:
+                        proc_logger.info("MCP 服務器已啟動 (使用 run 方法)")
+                        # 保持服務器運行，直到進程被終止
+                        while True:
                             await asyncio.sleep(1)
-                        logger.info("MCP 服務器正在關閉")
-                # 如果以上方法都不可用，則使用簡單的等待
                 else:
-                    logger.info("MCP 服務器已啟動 (簡易模式)")
-                    mcp_server_running = True
-                    # 保持服務器運行，直到線程被終止
-                    while mcp_server_running:
+                    proc_logger.info("使用簡易模式啟動 MCP 服務器")
+                    # 如果以上方法都不可用，則使用簡單的等待
+                    proc_logger.info("MCP 服務器已啟動 (簡易模式)")
+                    # 保持服務器運行，直到進程被終止
+                    while True:
                         await asyncio.sleep(1)
-                    logger.info("MCP 服務器正在關閉")
             except Exception as e:
-                logger.error(f"啟動 MCP 服務器時出錯: {str(e)}")
-                mcp_server_running = False
+                proc_logger.error(f"啟動 MCP 服務器時出錯: {str(e)}")
+                status_queue.put(False)
                 raise
         
+        # 創建新的事件循環
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         loop.run_until_complete(start_server())
         loop.close()
     except Exception as e:
-        logger.error(f"MCP 服務器線程出錯: {str(e)}")
+        proc_logger.error(f"MCP 服務器進程出錯: {str(e)}")
+        status_queue.put(False)
     finally:
-        mcp_server_running = False
-        logger.info("MCP 服務器線程已退出")
+        proc_logger.info("MCP 服務器進程已退出")
 
 # 路由定義
 @app.get("/", response_class=HTMLResponse)
@@ -410,28 +420,38 @@ async def check_mcp_status():
 @app.get("/api/start_mcp")
 async def start_mcp():
     """啟動 MCP 服務"""
-    global mcp_server_running, mcp_server_thread
+    global mcp_server_running, mcp_server_process
     
     if mcp_server_running:
         return {"status": "已在運行中", "running": True}
     
     try:
-        # 創建並啟動 MCP 服務器線程
-        mcp_server_thread = threading.Thread(target=run_mcp_server)
-        mcp_server_thread.daemon = True
-        mcp_server_thread.start()
+        # 清空隊列
+        while not mcp_status_queue.empty():
+            mcp_status_queue.get()
+        
+        # 創建並啟動 MCP 服務器進程
+        mcp_server_process = multiprocessing.Process(
+            target=run_mcp_server,
+            args=(mcp_status_queue,)
+        )
+        mcp_server_process.daemon = True
+        mcp_server_process.start()
+        
+        logger.info(f"已啟動 MCP 服務器進程 (PID: {mcp_server_process.pid})")
         
         # 等待服務器啟動
-        for _ in range(20):  # 增加等待時間
-            if mcp_server_running:
-                break
-            time.sleep(0.5)
-        
-        # 強制設置狀態為運行中
-        if mcp_server_thread.is_alive():
-            mcp_server_running = True
-            return {"status": "已啟動", "running": True}
-        else:
+        try:
+            # 設置超時時間為 10 秒
+            status = mcp_status_queue.get(timeout=10)
+            mcp_server_running = status
+            
+            if status:
+                return {"status": "已啟動", "running": True}
+            else:
+                return {"status": "啟動失敗", "running": False}
+        except Exception as e:
+            logger.error(f"等待 MCP 服務器啟動時出錯: {str(e)}")
             return {"status": "啟動超時", "running": False}
     except Exception as e:
         logger.error(f"啟動 MCP 服務器時出錯: {str(e)}")
@@ -440,19 +460,27 @@ async def start_mcp():
 @app.get("/api/stop_mcp")
 async def stop_mcp():
     """停止 MCP 服務"""
-    global mcp_server_running, mcp_server_thread
+    global mcp_server_running, mcp_server_process
     
     if not mcp_server_running:
         return {"status": "未在運行", "running": False}
     
     try:
-        # 設置標誌以停止服務器
+        # 終止進程
+        if mcp_server_process and mcp_server_process.is_alive():
+            logger.info(f"正在終止 MCP 服務器進程 (PID: {mcp_server_process.pid})")
+            mcp_server_process.terminate()
+            
+            # 等待進程結束
+            mcp_server_process.join(timeout=5)
+            
+            # 如果進程仍然存活，強制終止
+            if mcp_server_process.is_alive():
+                logger.warning("MCP 服務器進程未正常終止，強制終止")
+                mcp_server_process.kill()
+                mcp_server_process.join(timeout=1)
+        
         mcp_server_running = False
-        
-        # 等待線程結束
-        if mcp_server_thread and mcp_server_thread.is_alive():
-            mcp_server_thread.join(timeout=5)
-        
         return {"status": "已停止", "running": False}
     except Exception as e:
         logger.error(f"停止 MCP 服務器時出錯: {str(e)}")
@@ -501,6 +529,10 @@ async def call_tool(request: ToolRequest):
 
 # 啟動應用
 if __name__ == "__main__":
+    # 在 Windows 環境下設置多進程啟動方法
+    if sys.platform == 'win32':
+        multiprocessing.set_start_method('spawn', force=True)
+    
     # 獲取環境變量中的端口，如果沒有設置，則使用默認值 12001
     port = int(os.environ.get("PORT", 12001))
     
