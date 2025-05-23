@@ -19,12 +19,27 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # 創建 FastMCP 實例，設置為 Cursor 兼容模式
-mcp = FastMCP(
-    "SouthAsia",
-    # 添加以下配置以確保與 Cursor 兼容
-    cursor_compatible=True,  # 如果您的 MCP SDK 版本支持此參數
-    description="SouthAsia MCP 工具集，提供各種實用功能"
-)
+try:
+    # 嘗試使用帶有 cursor_compatible 參數的新版本 API
+    mcp = FastMCP(
+        "SouthAsia",
+        cursor_compatible=True,
+        description="SouthAsia MCP 工具集，提供各種實用功能"
+    )
+    logger.info("使用帶有 cursor_compatible 參數的 FastMCP 實例")
+except TypeError:
+    # 如果不支持 cursor_compatible 參數，則使用基本版本
+    try:
+        # 嘗試使用帶有 description 參數的版本
+        mcp = FastMCP(
+            "SouthAsia",
+            description="SouthAsia MCP 工具集，提供各種實用功能"
+        )
+        logger.info("使用帶有 description 參數的 FastMCP 實例")
+    except TypeError:
+        # 如果只支持最基本的參數，則使用最簡單的版本
+        mcp = FastMCP("SouthAsia")
+        logger.info("使用基本版本的 FastMCP 實例")
 
 # 嘗試初始化 HTTP 應用程序，使用不同的方法以兼容不同版本的 MCP SDK
 try:
@@ -42,39 +57,77 @@ try:
 except Exception as e:
     logger.warning(f"初始化 HTTP 應用程序時出錯: {str(e)}，但服務器仍將繼續運行")
 
-# 定義工具
-@mcp.tool(
-    name="mcp_hello_world",
-    description="一個簡單的示範工具，返回問候訊息",
-    examples=[{"random_string": "test"}]
-)
-async def hello_world(random_string: str = "default") -> List[TextContent]:
-    """一個簡單的示範工具，返回問候訊息"""
-    logger.info(f"執行 hello_world 工具，參數: {random_string}")
-    return [
-        TextContent(
-            type="text",
-            text="Hello World! 這是您的第一個 mcp 工具！"
-        )
-    ]
+# 定義工具 - 使用兼容不同版本 MCP SDK 的方式
+try:
+    # 嘗試使用帶有 examples 參數的新版本 API
+    @mcp.tool(
+        name="mcp_hello_world",
+        description="一個簡單的示範工具，返回問候訊息",
+        examples=[{"random_string": "test"}]
+    )
+    async def hello_world(random_string: str = "default") -> List[TextContent]:
+        """一個簡單的示範工具，返回問候訊息"""
+        logger.info(f"執行 hello_world 工具，參數: {random_string}")
+        return [
+            TextContent(
+                type="text",
+                text="Hello World! 這是您的第一個 mcp 工具！"
+            )
+        ]
+except TypeError:
+    # 如果不支持 examples 參數，則使用基本版本
+    logger.info("MCP SDK 不支持 examples 參數，使用基本版本註冊工具")
+    @mcp.tool(
+        name="mcp_hello_world",
+        description="一個簡單的示範工具，返回問候訊息"
+    )
+    async def hello_world(random_string: str = "default") -> List[TextContent]:
+        """一個簡單的示範工具，返回問候訊息"""
+        logger.info(f"執行 hello_world 工具，參數: {random_string}")
+        return [
+            TextContent(
+                type="text",
+                text="Hello World! 這是您的第一個 mcp 工具！"
+            )
+        ]
 
-@mcp.tool(
-    name="mcp_hello_name",
-    description="一個示範工具，根據名字問候您",
-    examples=[{"name": "工程師"}]
-)
-async def hello_name(name: str) -> List[TextContent]:
-    """一個示範工具，根據名字問候您"""
-    logger.info(f"執行 hello_name 工具，參數: {name}")
-    if not name:
-        raise ValueError("缺少名字參數")
-    
-    return [
-        TextContent(
-            type="text",
-            text=f"Hello {name}! 很高興見到您！"
-        )
-    ]
+try:
+    # 嘗試使用帶有 examples 參數的新版本 API
+    @mcp.tool(
+        name="mcp_hello_name",
+        description="一個示範工具，根據名字問候您",
+        examples=[{"name": "工程師"}]
+    )
+    async def hello_name(name: str) -> List[TextContent]:
+        """一個示範工具，根據名字問候您"""
+        logger.info(f"執行 hello_name 工具，參數: {name}")
+        if not name:
+            raise ValueError("缺少名字參數")
+        
+        return [
+            TextContent(
+                type="text",
+                text=f"Hello {name}! 很高興見到您！"
+            )
+        ]
+except TypeError:
+    # 如果不支持 examples 參數，則使用基本版本
+    @mcp.tool(
+        name="mcp_hello_name",
+        description="一個示範工具，根據名字問候您"
+    )
+    async def hello_name(name: str) -> List[TextContent]:
+        """一個示範工具，根據名字問候您"""
+        logger.info(f"執行 hello_name 工具，參數: {name}")
+        if not name:
+            raise ValueError("缺少名字參數")
+        
+        return [
+            TextContent(
+                type="text",
+                text=f"Hello {name}! 很高興見到您！"
+            )
+        ]
 
 # 啟動服務器的函數
 async def start_server():
