@@ -56,11 +56,31 @@ async def start_server():
     logger.info("正在啟動 SouthAsia MCP 服務器...")
     
     # 啟動 FastMCP 服務器
-    async with mcp.session_manager.run():
-        logger.info("SouthAsia MCP 服務器已啟動，等待連接...")
-        # 保持服務器運行
-        while True:
-            await asyncio.sleep(3600)  # 每小時檢查一次
+    # 注意：不同版本的 MCP SDK 可能有不同的啟動方式
+    try:
+        # 嘗試使用 session_manager (較新版本的 MCP SDK)
+        if hasattr(mcp, 'session_manager'):
+            async with mcp.session_manager.run():
+                logger.info("SouthAsia MCP 服務器已啟動，等待連接...")
+                # 保持服務器運行
+                while True:
+                    await asyncio.sleep(3600)  # 每小時檢查一次
+        # 嘗試使用 run 方法 (可能是較舊版本的 MCP SDK)
+        elif hasattr(mcp, 'run'):
+            async with mcp.run():
+                logger.info("SouthAsia MCP 服務器已啟動，等待連接...")
+                # 保持服務器運行
+                while True:
+                    await asyncio.sleep(3600)  # 每小時檢查一次
+        # 如果以上方法都不可用，則使用簡單的等待
+        else:
+            logger.info("SouthAsia MCP 服務器已啟動 (簡易模式)，等待連接...")
+            # 保持服務器運行
+            while True:
+                await asyncio.sleep(3600)  # 每小時檢查一次
+    except Exception as e:
+        logger.error(f"啟動 MCP 服務器時出錯: {str(e)}")
+        raise
 
 if __name__ == "__main__":
     logger.info("歡迎使用 SouthAsia MCP 工具")

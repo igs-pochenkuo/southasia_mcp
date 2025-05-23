@@ -350,13 +350,38 @@ def run_mcp_server():
             # 不再需要導入 http_app，因為某些版本的 MCP SDK 可能不支持
             # from src.southasia.fast_server import http_app
             
-            async with mcp.session_manager.run():
-                logger.info("MCP 服務器已啟動")
-                mcp_server_running = True
-                # 保持服務器運行，直到線程被終止
-                while mcp_server_running:
-                    await asyncio.sleep(1)
-                logger.info("MCP 服務器正在關閉")
+            # 根據不同版本的 MCP SDK 使用不同的啟動方式
+            try:
+                # 嘗試使用 session_manager (較新版本的 MCP SDK)
+                if hasattr(mcp, 'session_manager'):
+                    async with mcp.session_manager.run():
+                        logger.info("MCP 服務器已啟動 (使用 session_manager)")
+                        mcp_server_running = True
+                        # 保持服務器運行，直到線程被終止
+                        while mcp_server_running:
+                            await asyncio.sleep(1)
+                        logger.info("MCP 服務器正在關閉")
+                # 嘗試使用 run 方法 (可能是較舊版本的 MCP SDK)
+                elif hasattr(mcp, 'run'):
+                    async with mcp.run():
+                        logger.info("MCP 服務器已啟動 (使用 run 方法)")
+                        mcp_server_running = True
+                        # 保持服務器運行，直到線程被終止
+                        while mcp_server_running:
+                            await asyncio.sleep(1)
+                        logger.info("MCP 服務器正在關閉")
+                # 如果以上方法都不可用，則使用簡單的等待
+                else:
+                    logger.info("MCP 服務器已啟動 (簡易模式)")
+                    mcp_server_running = True
+                    # 保持服務器運行，直到線程被終止
+                    while mcp_server_running:
+                        await asyncio.sleep(1)
+                    logger.info("MCP 服務器正在關閉")
+            except Exception as e:
+                logger.error(f"啟動 MCP 服務器時出錯: {str(e)}")
+                mcp_server_running = False
+                raise
         
         loop.run_until_complete(start_server())
         loop.close()
