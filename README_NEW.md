@@ -187,15 +187,47 @@ async def 新工具函數(參數1: str, 參數2: int) -> List[TextContent]:
   - 使用不同的端口啟動應用程式：`PORT=12002 python new_web_app.py`
   - 或終止占用端口的進程後重試
 
-- **MCP SDK 版本兼容性問題**：
-  - 如果遇到 `AttributeError: 'FastMCP' object has no attribute 'xxx'` 錯誤，這是由於不同版本的 MCP SDK API 差異導致
-  - 本應用程式已內建兼容性處理，但如果仍然遇到問題，請檢查您的 MCP SDK 版本並參考相應文檔
-  - 您可以嘗試更新到最新版本的 MCP SDK：`pip install --upgrade mcp`
+### MCP SDK 版本兼容性問題
 
-- **asyncio 衝突問題**：
-  - 如果遇到 `Already running asyncio in this thread` 錯誤，這是因為 FastAPI 和 FastMCP 都使用 asyncio 事件循環導致的衝突
+本應用程式已內建多種兼容性處理機制，以支持不同版本的 MCP SDK。以下是一些常見的兼容性問題及解決方案：
+
+- **`examples` 參數不支持**:
+  ```
+  TypeError: FastMCP.tool() got an unexpected keyword argument 'examples'
+  ```
+  解決方案：應用程式會自動檢測並使用不帶 `examples` 參數的替代註冊方式。
+
+- **`cursor_compatible` 參數不支持**:
+  ```
+  TypeError: __init__() got an unexpected keyword argument 'cursor_compatible'
+  ```
+  解決方案：應用程式會自動降級到使用基本參數創建 FastMCP 實例。
+
+- **其他 API 差異**:
+  ```
+  AttributeError: 'FastMCP' object has no attribute 'xxx'
+  ```
+  解決方案：
+  - 應用程式會嘗試使用多種方法初始化 HTTP 應用程序
+  - 如果仍然遇到問題，請嘗試更新到最新版本的 MCP SDK：`pip install --upgrade mcp`
+  - 或者降級到已知兼容的版本：`pip install mcp==0.x.y`
+
+### asyncio 衝突問題
+
+- **事件循環衝突**:
+  ```
+  RuntimeError: This event loop is already running
+  ```
+  或
+  ```
+  RuntimeError: Cannot run the event loop while another loop is running
+  ```
+  解決方案：
   - 最新版本的應用程式已使用多進程代替多線程來啟動 MCP 服務，解決了這個問題
-  - 如果仍然遇到問題，請嘗試重新安裝 MCP SDK：`pip uninstall mcp -y && pip install mcp`
+  - 如果仍然遇到問題，請嘗試以下步驟：
+    1. 重新安裝 MCP SDK：`pip uninstall mcp -y && pip install mcp`
+    2. 確保您的 Python 環境中沒有其他使用 asyncio 的應用程式同時運行
+    3. 在某些情況下，重啟電腦可能有助於解決深層次的 asyncio 衝突
 
 ## 在 Cursor 中使用 MCP
 
@@ -209,10 +241,17 @@ async def 新工具函數(參數1: str, 參數2: int) -> List[TextContent]:
 
 2. **配置 Cursor**：
    - 打開 Cursor 編輯器
-   - 進入設置 (Settings)，找到 "AI" 或 "Extensions" 部分
-   - 在 "Local MCP Studio" 或 "MCP 設置" 中，配置以下參數：
-     - MCP 服務地址：`http://localhost:12001`
-     - 啟用本地 MCP 服務：開啟
+   - 進入設置 (Settings)，找到 "AI" 部分
+   - 在 "MCP" 設置中，添加以下配置：
+
+   ```json
+   "pythonStudioMCP": {
+     "url": "http://localhost:12001",
+     "env": {}
+   }
+   ```
+
+   - 確保 MCP 功能已啟用（開關處於開啟狀態）
 
 3. **測試連接**：
    - 在 Cursor 中打開命令面板 (通常是 Cmd/Ctrl+Shift+P)
@@ -223,20 +262,25 @@ async def 新工具函數(參數1: str, 參數2: int) -> List[TextContent]:
 
 1. **直接在編輯器中使用 MCP 工具**：
    - 在編輯代碼時，可以通過 Cursor 的 AI 功能調用已註冊的 MCP 工具
-   - 例如，可以在命令面板中輸入 "Run MCP Tool: mcp_hello_name" 並提供參數
+   - 例如，可以在聊天窗口中輸入：
+     ```
+     請使用 mcp_hello_name 工具，參數為 name="張三"
+     ```
+   - Cursor 會自動識別並調用相應的工具
 
-2. **通過 Cursor 擴展 API 調用**：
-   - 如果您正在開發 Cursor 擴展，可以使用以下 API 調用 MCP 工具：
-   ```javascript
-   // 示例代碼 (JavaScript)
-   const response = await cursor.mcp.callTool("mcp_hello_name", { name: "張三" });
-   console.log(response);
-   ```
+2. **通過命令面板使用**：
+   - 打開命令面板 (Cmd/Ctrl+Shift+P)
+   - 輸入 "Run MCP Tool" 並選擇相應的工具
+   - 輸入所需參數
+   - 查看結果
 
 3. **故障排除**：
    - 確保 MCP 服務已啟動並正常運行
    - 檢查 Cursor 中的 MCP 服務地址配置是否正確
-   - 如果遇到連接問題，可以嘗試重啟 MCP 服務和 Cursor
+   - 如果顯示 "No tools available"，請確保：
+     1. MCP 服務已成功啟動（在網頁界面點擊"啟動 MCP 服務"按鈕）
+     2. `/mcp/list_tools` 端點能夠正常返回工具列表
+     3. 嘗試重啟 Cursor 或重新加載 MCP 設置
 
 ### 進階整合
 
@@ -246,6 +290,24 @@ async def 新工具函數(參數1: str, 參數2: int) -> List[TextContent]:
 2. 重啟 MCP 服務以使新工具生效
 3. 在 Cursor 中刷新 MCP 工具列表 (通常在命令面板中有相應選項)
 4. 新工具將可在 Cursor 中使用
+
+### 手動測試 MCP 端點
+
+您可以使用 curl 命令手動測試 MCP 端點：
+
+1. **列出工具**：
+   ```bash
+   curl -X POST http://localhost:12001/mcp/list_tools
+   ```
+
+2. **調用工具**：
+   ```bash
+   curl -X POST -H "Content-Type: application/json" \
+        -d '{"name":"mcp_hello_name","parameters":{"name":"張三"}}' \
+        http://localhost:12001/mcp/call_tool
+   ```
+
+這些測試可以幫助您確認 MCP 服務是否正常運行，以及 Cursor 無法識別工具時進行故障排除。
 
 ## 貢獻與支持
 
