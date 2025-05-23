@@ -486,6 +486,105 @@ async def stop_mcp():
         logger.error(f"停止 MCP 服務器時出錯: {str(e)}")
         return {"status": f"停止失敗: {str(e)}", "running": mcp_server_running}
 
+# 添加 MCP 協議所需的路由
+@app.post("/mcp/list_tools")
+async def list_tools():
+    """列出所有可用的 MCP 工具 (Cursor 需要此端點)"""
+    global mcp_server_running
+    
+    if not mcp_server_running:
+        return {"tools": []}
+    
+    # 返回工具列表
+    tools = [
+        {
+            "name": "mcp_hello_world",
+            "description": "一個簡單的示範工具，返回問候訊息",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "random_string": {
+                        "type": "string",
+                        "description": "任意字符串參數"
+                    }
+                },
+                "required": []
+            },
+            "examples": [{"random_string": "test"}]
+        },
+        {
+            "name": "mcp_hello_name",
+            "description": "一個示範工具，根據名字問候您",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "您的名字"
+                    }
+                },
+                "required": ["name"]
+            },
+            "examples": [{"name": "工程師"}]
+        }
+    ]
+    
+    return {"tools": tools}
+
+@app.post("/mcp/call_tool")
+async def mcp_call_tool(request: Request):
+    """MCP 工具調用端點 (Cursor 需要此端點)"""
+    global mcp_server_running
+    
+    if not mcp_server_running:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "MCP 服務未運行，請先啟動服務"}
+        )
+    
+    # 解析請求
+    data = await request.json()
+    tool_name = data.get("name", "")
+    arguments = data.get("parameters", {})
+    
+    logger.info(f"收到 MCP 工具調用請求: {tool_name}, 參數: {arguments}")
+    
+    try:
+        # 根據工具名稱調用對應的函數
+        if tool_name == "mcp_hello_world":
+            result = await hello_world(arguments.get("random_string", "dummy"))
+        elif tool_name == "mcp_hello_name":
+            result = await hello_name(arguments.get("name", ""))
+        else:
+            return JSONResponse(
+                status_code=400,
+                content={"error": f"未知的工具: {tool_name}"}
+            )
+        
+        # 處理結果
+        if result:
+            # 處理不同版本的 MCP SDK 可能返回的不同結果格式
+            if isinstance(result, list) and len(result) > 0:
+                if hasattr(result[0], "text"):
+                    return {"result": result[0].text}
+                elif isinstance(result[0], dict) and "text" in result[0]:
+                    return {"result": result[0]["text"]}
+                elif isinstance(result[0], str):
+                    return {"result": result[0]}
+            elif isinstance(result, dict) and "text" in result:
+                return {"result": result["text"]}
+            elif isinstance(result, str):
+                return {"result": result}
+
+        # 如果無法提取文本，返回通用消息
+        return {"result": "工具執行成功，但無法解析結果格式"}
+    except Exception as e:
+        logger.error(f"調用工具 {tool_name} 時出錯: {str(e)}")
+        return JSONResponse(
+            status_code=400,
+            content={"error": str(e)}
+        )
+
 @app.post("/api/call_tool")
 async def call_tool(request: ToolRequest):
     """調用 MCP 工具"""
